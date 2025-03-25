@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
 const createInvoice = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod } = req.body;
+        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue } = req.body;
 
         if (!CustomerName || !CustomerEmail || !AmountPaid || !Date || !PaymentMethod || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
@@ -36,6 +36,7 @@ const createInvoice = async (req, res) => {
             Items,
             AmountPaid,
             DueDate,
+            IsDue,
             Date,
             PaymentMethod,
             user: userId
@@ -79,9 +80,9 @@ const updateInvoice = async (req, res) => {
             return res.status(400).send({ "message": "Invalid invoice ID" });
         }
         const userId = req.user.id;
-        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod } = req.body;
+        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue } = req.body;
 
-        if (!CustomerName || !CustomerEmail || !AmountPaid || !Date || !PaymentMethod || Items.length === 0) {
+        if (!CustomerName || !CustomerEmail || !AmountPaid || !Date || !PaymentMethod || !IsDue || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 

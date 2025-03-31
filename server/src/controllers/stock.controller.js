@@ -22,7 +22,7 @@ const addStock = async (req, res) => {
         }
 
         const newStock = new Stock({
-            ItemName,
+            ItemName: ItemName,
             CostPrice,
             SellingPrice,
             AvailableQuantity,

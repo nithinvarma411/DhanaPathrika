@@ -48,8 +48,12 @@ const RecentActivity = () => {
                 : `New invoice for ${invoice.CustomerName}`,
               date: formattedDate,
               amount: `$${invoice.AmountPaid.toFixed(2)}`,
+              timestamp: date.getTime(), // Store timestamp for sorting
             };
           });
+
+          // Sort by latest date first
+          formattedActivities.sort((a, b) => b.timestamp - a.timestamp);
 
           setActivities(formattedActivities);
 
@@ -95,7 +99,7 @@ const RecentActivity = () => {
         <div className="flex justify-center mt-4">
           <button
             className="text-[#FFF123] hover:underline"
-            onClick={() => navigate("/invoice-history")}
+            onClick={() => navigate("/bills")}
           >
             View More
           </button>

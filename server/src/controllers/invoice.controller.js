@@ -7,7 +7,7 @@ const createInvoice = async (req, res) => {
         const userId = req.user.id;
         const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue } = req.body;
 
-        if (!CustomerName || !CustomerEmail || !AmountPaid || !Date || !PaymentMethod || Items.length === 0) {
+        if (!CustomerName || !CustomerEmail || !AmountPaid || !PaymentMethod || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
@@ -15,12 +15,17 @@ const createInvoice = async (req, res) => {
             return res.status(400).send({ "message": "Amount cannot be less than 0" });
         }
 
+        // Calculate total amount of all items
+        let totalAmount = 0;
         for (const item of Items) {
             const stockItem = await Stock.findOne({ ItemName: item.Name, user: userId });
 
             if (!stockItem) {
-                return res.status(404).send({ "message": `Stock item '${item.Name}' not found` });
+                return res.status(404).send({ "message": `Stock item '${item.Name}' not found, Please check the spelling it must be exactly same` });
             }
+
+            console.log(stockItem.AvailableQuantity, item.Quantity);
+            
 
             if (stockItem.AvailableQuantity < item.Quantity) {
                 return res.status(400).send({ "message": `Not enough stock for '${item.Name}'` });
@@ -28,15 +33,27 @@ const createInvoice = async (req, res) => {
 
             stockItem.AvailableQuantity -= item.Quantity;
             await stockItem.save();
+
+            totalAmount += item.AmountPerItem * item.Quantity; // Calculate total amount
+            // console.log(item.AmountPerItem, item.Quantity);
+            
+        }
+        // console.log(totalAmount);
+        
+
+        // Check if DueDate is required
+        if (AmountPaid < totalAmount && !DueDate) {
+            return res.status(400).send({ "message": "Due Date is required when full payment is not made" });
         }
 
+        // Create invoice object
         const newInvoice = new Invoice({
             CustomerName,
             CustomerEmail,
             Items,
             AmountPaid,
-            DueDate,
-            IsDue,
+            DueDate: AmountPaid < totalAmount ? DueDate : undefined, // Only include DueDate if needed
+            IsDue: AmountPaid < totalAmount,
             Date,
             PaymentMethod,
             user: userId
@@ -50,6 +67,7 @@ const createInvoice = async (req, res) => {
         return res.status(500).send({ "message": "Internal Server Error" });
     }
 };
+
 
 const getInvoices = async (req, res) => {
     try {
@@ -75,14 +93,22 @@ const updateInvoice = async (req, res) => {
     try {
         let { id } = req.params;
         id = id.replace(":", "");
+
+        // console.log(id);
+        
                 
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).send({ "message": "Invalid invoice ID" });
         }
         const userId = req.user.id;
+        // console.log(userId);
+        
         const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue } = req.body;
 
-        if (!CustomerName || !CustomerEmail || !AmountPaid || !Date || !PaymentMethod || !IsDue || Items.length === 0) {
+        // console.log(CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue);
+        
+
+        if (!CustomerName || !CustomerEmail || !AmountPaid || !Date || !PaymentMethod || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
@@ -91,6 +117,8 @@ const updateInvoice = async (req, res) => {
         }
 
         const invoice = await Invoice.findById(id);
+        // console.log(invoice);
+        
         if (!invoice || invoice.user.toString() !== userId) {
             return res.status(404).send({ "message": "Invoice not found or unauthorized" });
         }
@@ -133,7 +161,7 @@ const updateInvoice = async (req, res) => {
 
         const updatedInvoice = await Invoice.findByIdAndUpdate(
             id,
-            { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod },
+            { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue },
             { new: true }
         );
 
@@ -146,9 +174,16 @@ const updateInvoice = async (req, res) => {
 
 const deleteInvoice = async (req, res) => {
     try {
-        const { id } = req.params;
-        const userId = req.user.id;
+        let { id } = req.params;
+        id = id.replace(":", "");
 
+        // console.log(id);
+        
+                
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).send({ "message": "Invalid invoice ID" });
+        }
+        const userId = req.user.id;
         const invoice = await Invoice.findById(id);
         if (!invoice || invoice.user.toString() !== userId) {
             return res.status(404).send({ "message": "Invoice not found or unauthorized" });
@@ -170,4 +205,21 @@ const deleteInvoice = async (req, res) => {
     }
 };
 
-export {createInvoice, getInvoices, updateInvoice, deleteInvoice}
+
+const getLatestInvoice = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const latestInvoice = await Invoice.findOne({ user: userId }).sort({ createdAt: -1 });
+
+        if (!latestInvoice) {
+            return res.status(404).send({ "message": "No invoices found" });
+        }
+
+        return res.status(200).send({ "message": "Latest invoice retrieved", invoice: latestInvoice });
+    } catch (error) {
+        console.error("Error fetching latest invoice:", error);
+        return res.status(500).send({ "message": "Internal Server Error" });
+    }
+};
+
+export {createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice};

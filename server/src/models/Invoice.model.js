@@ -20,6 +20,6 @@ const invoiceSchema = new Schema({
     },
     PaymentMethod: String,
     user: { type: Schema.Types.ObjectId, ref: "User" }
-});
+},{timestamps: true});
 
 export const Invoice = model("Invoice", invoiceSchema);

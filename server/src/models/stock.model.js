@@ -7,6 +7,6 @@ const stockSchema = new Schema({
     AvailableQuantity: Number,
     MinQuantity: Number,
     user: { type: Schema.Types.ObjectId, ref: "User" } 
-})
+},{timestamps:true})
 
 export const Stock = model("Stock", stockSchema);

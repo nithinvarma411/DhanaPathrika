@@ -9,6 +9,6 @@ const userSchema = new Schema({
     Logo: String,
     BussinessAdress: String,
     Pincode: Number
-})
+},{timestamps: true})
 
 export const User = model("User", userSchema);

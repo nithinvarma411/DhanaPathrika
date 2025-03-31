@@ -39,8 +39,26 @@ const StatsSummary = () => {
 
             if (invoiceMonth === currentMonth && invoiceYear === currentYear) {
               totalRevenue += invoice.AmountPaid;
+              console.log(invoice.AmountPaid);
+              
               currentInvoices++;
-              if (invoice.IsDue) overdueInvoices++;
+              if (invoice.DueDate) {  
+                const parts = invoice.DueDate.split("-");
+                if (parts.length === 3) {  
+                  const year = parseInt(parts[0], 10);
+                  const month = parseInt(parts[1], 10);
+                  const day = parseInt(parts[2], 10);
+                  const dueDate = new Date(year, month - 1, day); 
+                  
+                  // console.log("Invoice Due Date:", invoice.DueDate, "Parsed Due Date:", dueDate);
+                  
+                  if (!isNaN(dueDate.getTime()) && dueDate < currentDate) {
+                    overdueInvoices++;
+                  }
+                }
+              }
+              
+              
               if (invoice.AmountPaid < invoice.Items.reduce((sum, item) => sum + item.AmountPerItem * item.Quantity, 0)) pendingBills++;
             } else if (invoiceMonth === prevMonth && invoiceYear === prevYear) {
               prevRevenue += invoice.AmountPaid;

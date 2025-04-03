@@ -12,6 +12,8 @@ const StatsSummary = () => {
     overdueInvoices: 0,
     revenueChange: "N/A",
     invoiceChange: "N/A",
+    pendingChange: "N/A",
+    overdueChange: "N/A",
   });
 
   useEffect(() => {
@@ -23,7 +25,8 @@ const StatsSummary = () => {
         if (response.status === 201) {
           const invoices = data.invoices;
           let totalRevenue = 0, prevRevenue = 0;
-          let pendingBills = 0, overdueInvoices = 0;
+          let pendingBills = 0, prevPendingBills = 0;
+          let overdueInvoices = 0, prevOverdueInvoices = 0;
           let currentInvoices = 0, prevInvoices = 0;
           
           const currentDate = new Date();
@@ -37,37 +40,42 @@ const StatsSummary = () => {
             const invoiceMonth = invoiceDate.getMonth();
             const invoiceYear = invoiceDate.getFullYear();
 
+            const totalAmount = invoice.Items.reduce((sum, item) => sum + item.AmountPerItem * item.Quantity, 0);
+            const dueAmount = totalAmount - invoice.AmountPaid;
+
             if (invoiceMonth === currentMonth && invoiceYear === currentYear) {
               totalRevenue += invoice.AmountPaid;
-              console.log(invoice.AmountPaid);
-              
               currentInvoices++;
+
               if (invoice.DueDate) {  
-                const parts = invoice.DueDate.split("-");
-                if (parts.length === 3) {  
-                  const year = parseInt(parts[0], 10);
-                  const month = parseInt(parts[1], 10);
-                  const day = parseInt(parts[2], 10);
-                  const dueDate = new Date(year, month - 1, day); 
-                  
-                  // console.log("Invoice Due Date:", invoice.DueDate, "Parsed Due Date:", dueDate);
-                  
-                  if (!isNaN(dueDate.getTime()) && dueDate < currentDate) {
-                    overdueInvoices++;
-                  }
+                const [year, month, day] = invoice.DueDate.split("-").map(Number);
+                const dueDate = new Date(year, month - 1, day);
+                if (!isNaN(dueDate.getTime()) && dueDate < currentDate) {
+                  overdueInvoices++;
                 }
               }
-              
-              
-              if (invoice.AmountPaid < invoice.Items.reduce((sum, item) => sum + item.AmountPerItem * item.Quantity, 0)) pendingBills++;
+
+              if (dueAmount > 0) pendingBills++;
             } else if (invoiceMonth === prevMonth && invoiceYear === prevYear) {
               prevRevenue += invoice.AmountPaid;
               prevInvoices++;
+              
+              if (invoice.DueDate) {
+                const [year, month, day] = invoice.DueDate.split("-").map(Number);
+                const dueDate = new Date(year, month - 1, day);
+                if (!isNaN(dueDate.getTime()) && dueDate < currentDate) {
+                  prevOverdueInvoices++;
+                }
+              }
+              
+              if (dueAmount > 0) prevPendingBills++;
             }
           });
 
           const revenueChange = prevRevenue ? (((totalRevenue - prevRevenue) / prevRevenue) * 100).toFixed(2) + "%" : "N/A";
           const invoiceChange = prevInvoices ? (((currentInvoices - prevInvoices) / prevInvoices) * 100).toFixed(2) + "%" : "N/A";
+          const pendingChange = prevPendingBills ? (((pendingBills - prevPendingBills) / prevPendingBills) * 100).toFixed(2) + "%" : "N/A";
+          const overdueChange = prevOverdueInvoices ? (((overdueInvoices - prevOverdueInvoices) / prevOverdueInvoices) * 100).toFixed(2) + "%" : "N/A";
 
           setStats({
             totalRevenue,
@@ -76,6 +84,8 @@ const StatsSummary = () => {
             overdueInvoices,
             revenueChange,
             invoiceChange,
+            pendingChange,
+            overdueChange,
           });
         } else {
           toast.error("Error fetching invoices: " + data.message);
@@ -107,15 +117,15 @@ const StatsSummary = () => {
       <StatsCard 
         title="Pending Bills this Month" 
         value={stats.pendingBills} 
-        change="N/A" 
-        isPositive={false} 
+        change={stats.pendingChange} 
+        isPositive={!stats.pendingChange !== "N/A" && !parseFloat(stats.pendingChange) <= 0} 
       />
       
       <StatsCard 
         title="Overdue Invoices" 
         value={stats.overdueInvoices} 
-        change="N/A" 
-        isPositive={false} 
+        change={stats.overdueChange} 
+        isPositive={!stats.overdueChange !== "N/A" && !parseFloat(stats.overdueChange) <= 0} 
       />
     </div>
   );

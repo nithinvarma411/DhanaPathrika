@@ -1,5 +1,4 @@
-import React, { useEffect, useState, useRef } from "react";
-import axios from "axios";
+import React from "react";
 
 const Invoice = ({ invoice, profile }) => {
   if (!invoice || !profile) {
@@ -10,7 +9,7 @@ const Invoice = ({ invoice, profile }) => {
   const totalAmount = invoice.Items.reduce((sum, item) => sum + item.Quantity * item.AmountPerItem, 0);
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-2 sm:p-4">
+    <div className="flex items-center justify-center p-2 sm:p-4">
       <div className="w-full max-w-4xl bg-white rounded-lg shadow-lg">
         {/* Header section */}
         <div className="flex flex-col sm:flex-row justify-between items-center p-4 sm:p-6 gap-4">
@@ -55,7 +54,7 @@ const Invoice = ({ invoice, profile }) => {
               <p className="text-sm md:text-base break-words">{invoice.CustomerEmail || "N/A"}</p>
             </div>
 
-            <div className="col-span-1 sm:col-span-2 overflow-x-auto">
+            <div className="col-span-1 sm:col-span-2 overflow-x-auto scrollbar-hide">
               <table className="w-full min-w-full">
                 <thead>
                   <tr className="border-b border-gray-300">

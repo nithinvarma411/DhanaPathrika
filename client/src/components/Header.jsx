@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/logo.jpg";
 import axios from "axios";
@@ -14,23 +14,29 @@ const Header = () => {
     lowStockItems: [],
   });
 
+  const hasFetched = useRef(false);
+
   const toggleSidebar = () => {
     setSidebarOpen(!isSidebarOpen);
   };
 
   const fetchNotifications = async () => {
     try {
-      // Fetch overdue invoices
+      if (hasFetched.current) return; // Prevent multiple calls
+      hasFetched.current = true; // Mark as called
+
       const invoiceResponse = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/invoice/getInvoices`,
         { withCredentials: true }
       );
 
-      // Fetch low stock items
       const stockResponse = await axios.get(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/stock/getStock`,
         { withCredentials: true }
       );
+
+      // console.log(stockResponse);
+      
 
       const invoices = invoiceResponse.data.invoices;
       const stocks = stockResponse.data;
@@ -39,7 +45,6 @@ const Header = () => {
       let overdueInvoices = [];
       let lowStockItems = [];
 
-      // Process overdue invoices
       invoices.forEach((invoice) => {
         if (invoice.DueDate) {
           const parts = invoice.DueDate.split("-");
@@ -57,13 +62,12 @@ const Header = () => {
                   .toLocaleDateString("en-GB")
                   .split("/")
                   .join("-"),
-              });              
+              });
             }
           }
         }
       });
 
-      // Process low stock items
       stocks.forEach((stock) => {
         if (stock.AvailableQuantity < stock.MinQuantity) {
           lowStockItems.push({
@@ -74,7 +78,6 @@ const Header = () => {
         }
       });
 
-      // Store in state
       setNotifications({ overdueInvoices, lowStockItems });
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -83,7 +86,7 @@ const Header = () => {
   };
 
   useEffect(() => {
-    fetchNotifications(); // Fetch notifications when component mounts
+    fetchNotifications();
   }, []);
 
   const toggleNotifications = () => {
@@ -129,7 +132,7 @@ const Header = () => {
         <div className="flex items-center">
           <button
             onClick={toggleSidebar}
-            className="mr-4 p-2 rounded-md hover:bg-gray-500 transition"
+            className="mr-4 p-2 rounded-md hover:bg-red-500 transition"
           >
             <svg
               className="w-8 h-8 text-white"

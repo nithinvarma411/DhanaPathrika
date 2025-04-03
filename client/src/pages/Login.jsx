@@ -13,6 +13,7 @@ import appleIcon from "../assets/apple.png";
 
 const Login = () => {
   const welcomeText = "Welcome to Dhana Pathrika".split(" ");
+  const [loading, setLoading] = useState(false);
   const [NumberOrEmail, setNumberOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -34,7 +35,8 @@ const Login = () => {
   };
 
   const sendResponse = async () => {
-    if (!validateInput()) return;
+    if (!validateInput() || loading) return;
+    setLoading(true);
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/login`,
@@ -44,20 +46,27 @@ const Login = () => {
         },
         { withCredentials: true }
       );
-      
+
       toast.success(response.data.message || "Registration successful!");
 
       setTimeout(() => {
         window.location.href = "/home";
       }, 1500);
-
     } catch (error) {
       console.error(error);
       toast.error(
         error.response?.data?.message ||
           "Registration failed. Please try again."
       );
+    } finally {
+      setLoading(false);
     }
+  };
+
+  const handleGoogleLogin = async () => {
+    if (loading) return;
+    setLoading(true);
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google`;
   };
 
   return (
@@ -93,7 +102,11 @@ const Login = () => {
           transition={{ duration: 0.5 }}
           className="hidden md:flex md:w-1/2 items-center justify-center"
         >
-          <img src={mainImage} alt="Illustration" className="w-150 h-90 rounded-4xl" />
+          <img
+            src={mainImage}
+            alt="Illustration"
+            className="w-150 h-90 rounded-4xl"
+          />
         </motion.div>
 
         <div className="w-full md:w-2/3 bg-white shadow-lg rounded-lg p-6 md:p-8">
@@ -146,33 +159,52 @@ const Login = () => {
             <motion.button
               type="button"
               onClick={sendResponse}
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full bg-red-500 text-white py-3 rounded-lg hover:bg-red-700 hover:shadow-xl"
+              disabled={loading}
+              whileHover={!loading ? { scale: 1.05 } : {}}
+              whileTap={!loading ? { scale: 0.95 } : {}}
+              className={`w-full py-3 rounded-lg ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-red-500 hover:bg-red-600"
+              } text-white`}
             >
-              Login
+              {loading ? "Processing..." : "Login"}
             </motion.button>
           </form>
 
           <div className="my-4 text-center text-gray-500">OR</div>
           <div className="space-y-3">
-            {[
-              { icon: googleIcon, text: "Continue with Google" },
-              { icon: appleIcon, text: "Continue with Apple" },
-            ].map((btn, index) => (
-              <motion.button
-                key={index}
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md"
-              >
-                <img src={btn.icon} alt={btn.text} className="w-5 h-5 mr-2" />
-                {btn.text}
-              </motion.button>
-            ))}
+            <motion.button
+              onClick={handleGoogleLogin}
+              disabled={loading}
+              whileHover={!loading ? { scale: 1.05 } : {}}
+              whileTap={!loading ? { scale: 0.95 } : {}}
+              className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <img
+                src={googleIcon}
+                alt="Continue with Google"
+                className="w-5 h-5 mr-2"
+              />
+              {loading ? "Processing..." : "Continue with Google"}
+            </motion.button>
+
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md"
+            >
+              <img
+                src={appleIcon}
+                alt="Continue with Apple"
+                className="w-5 h-5 mr-2"
+              />
+              Continue with Apple
+            </motion.button>
           </div>
+
           <p className="text-center text-sm mt-4 text-gray-600">
-            Don't have an Account ? {" "}
+            Don't have an Account ?{" "}
             <Link to="/" className="text-red-500 font-medium">
               Register Here
             </Link>

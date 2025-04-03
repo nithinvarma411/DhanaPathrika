@@ -3,8 +3,7 @@ import axios from "axios";
 import Header from "../components/Header";
 import Invoice from "../components/Invoice";
 import bgImage from "../assets/bg.jpg";
-import html2canvas from "html2canvas";
-import jsPDF from "jspdf";
+import domtoimage from "dom-to-image";
 
 const InvoicePage = () => {
   const [invoice, setInvoice] = useState(null);
@@ -17,46 +16,39 @@ const InvoicePage = () => {
   useEffect(() => {
     if (!hasFetchedInvoice.current) {
       hasFetchedInvoice.current = true;
-      const fetchLatestInvoice = async () => {
-        try {
-          const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/invoice/latest-invoice`, {
-            withCredentials: true,
-          });
-          setInvoice(response.data.invoice);
-        } catch (error) {
-          console.error("Error fetching invoice:", error);
-        }
-      };
-      fetchLatestInvoice();
+      axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/invoice/latest-invoice`, { withCredentials: true })
+        .then(response => setInvoice(response.data.invoice))
+        .catch(error => console.error("Error fetching invoice:", error));
     }
   }, []);
 
   useEffect(() => {
     if (!hasFetchedProfile.current) {
       hasFetchedProfile.current = true;
-      const fetchProfile = async () => {
-        try {
-          const response = await axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/profile/getProfile`, {
-            withCredentials: true,
-          });
-          setProfile(response.data.profile);
-        } catch (error) {
-          console.error("Error fetching profile:", error);
-        }
-      };
-      fetchProfile();
+      axios.get(`${import.meta.env.VITE_BACKEND_URL}/api/v1/profile/getProfile`, { withCredentials: true })
+        .then(response => setProfile(response.data.profile))
+        .catch(error => console.error("Error fetching profile:", error));
     }
   }, []);
 
   const downloadInvoice = async () => {
     if (!invoiceRef.current) return;
-    const canvas = await html2canvas(invoiceRef.current);
-    const imgData = canvas.toDataURL("image/png");
-
-    const pdf = new jsPDF("p", "mm", "a4");
-    pdf.addImage(imgData, "PNG", 10, 10, 190, 0);
-    pdf.save(`Invoice_${invoice?._id || "Download"}.pdf`);
+  
+    try {
+      const dataUrl = await domtoimage.toJpeg(invoiceRef.current, { quality: 0.95 });
+      
+      // Create a download link for the image
+      const link = document.createElement("a");
+      link.href = dataUrl;
+      link.download = `Invoice_${invoice?._id || "Download"}.jpeg`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error capturing invoice:", error);
+    }
   };
+  
 
   return (
     <div className="flex flex-col h-screen" style={{ backgroundImage: `url(${bgImage})` }}>

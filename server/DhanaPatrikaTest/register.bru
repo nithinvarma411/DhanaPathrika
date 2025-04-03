@@ -1,0 +1,19 @@
+meta {
+  name: register
+  type: http
+  seq: 3
+}
+
+post {
+  url: http://localhost:4444/api/v1/user/register
+  body: json
+  auth: none
+}
+
+body:json {
+  {
+    "MobileNumber": 9999991111,
+    "Email": "qweff32@gmail.com",
+    "Password": "0987654321"
+  }
+}

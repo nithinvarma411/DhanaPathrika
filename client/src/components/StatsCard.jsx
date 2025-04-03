@@ -10,11 +10,11 @@ const StatsCard = ({ title, value, change, isPositive }) => {
         boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)", // Adds depth
       }}
       transition={{ type: "spring", stiffness: 200, damping: 10 }} // Smooth transition
-      className="bg-[#8f4e4e] backdrop-blur rounded-lg p-4 flex-1 min-w-64"
+      className="bg-[#5e2e2e] backdrop-blur rounded-lg p-4 flex-1 min-w-64"
     >
       <h2 className="text-xl">{title}</h2>
       <p className="text-3xl font-bold mt-2">{value}</p>
-      <div className={`flex items-center mt-2 ${isPositive ? 'text-green-400' : 'text-red-400'}`}>
+      <div className={`flex items-center mt-2 ${isPositive ? 'text-green-400' : 'text-[#d80f0f]'}`}>
         <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
           <path 
             strokeLinecap="round" 

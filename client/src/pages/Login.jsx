@@ -47,11 +47,8 @@ const Login = () => {
         { withCredentials: true }
       );
 
-      toast.success(response.data.message || "Registration successful!");
-
-      setTimeout(() => {
-        window.location.href = "/home";
-      }, 1500);
+      toast.success(response.data.message || "Registration successful!");     
+      window.location.href = "/home";
     } catch (error) {
       console.error(error);
       toast.error(

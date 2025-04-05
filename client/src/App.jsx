@@ -10,6 +10,8 @@ import Dashboard from './pages/Dashboard';
 import InvoicePage from './pages/InvoicePage';
 import BillingPage from './pages/BillingPage';
 import InvoiceGenerator from './pages/InvoiceGenerator';
+import StockMaintainance from './pages/StockMaintainance';
+import AddStock from './pages/AddStock';
 
 function App() {
 
@@ -24,8 +26,10 @@ function App() {
         <Route path='/Bills' element={<BillingPage/>} />
         <Route path='/invoice-generator' element={<InvoiceGenerator/>} />
         <Route path='/invoice' element={<InvoicePage/>} />
+        <Route path='/stock-maintenance' element={<StockMaintainance/>} />
+        <Route path='/add-stock' element={<AddStock/>} />
       </Routes>
-      <ToastContainer position="top-right" autoClose={2000} />
+      <ToastContainer position="top-right" autoClose={1000} />
     </BrowserRouter>
   );
 }

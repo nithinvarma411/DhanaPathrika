@@ -3,9 +3,11 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { ClipLoader } from "react-spinners";
 
 const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   const [billingData, setBillingData] = useState([]);
+  const [loading, setLoading] = useState(true);
   const toastShown = useRef(false);
 
   useEffect(() => {
@@ -28,11 +30,21 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         }
       } catch (error) {
         console.error("Error fetching invoices:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
     fetchInvoices();
   }, []);
+
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <ClipLoader size={50} color="#36d7b7" />
+      </div>
+    );
+  }
 
   const handleMarkAsPaid = async (invoiceId) => {
     const result = await Swal.fire({

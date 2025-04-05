@@ -7,7 +7,7 @@ const addStock = async (req, res) => {
         const userId = req.user.id;
         // console.log("userId", userId)
 
-        if (!ItemName || !CostPrice || !SellingPrice || !AvailableQuantity || !MinQuantity) {
+        if (!ItemName || isNaN(CostPrice) || isNaN(SellingPrice) || isNaN(AvailableQuantity) || isNaN(MinQuantity)) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
@@ -69,7 +69,7 @@ const updateStock = async (req, res) => {
         const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity } = req.body;
         const userId = req.user.id;
 
-        if (!ItemName || !CostPrice || !SellingPrice || !AvailableQuantity || !MinQuantity) {
+        if (!ItemName || isNaN(CostPrice) || isNaN(SellingPrice) || isNaN(AvailableQuantity) || isNaN(MinQuantity)) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 

@@ -50,7 +50,6 @@ const Signup = () => {
       );
 
       if (response.status === 200) {
-        toast.success(response.data.message || "Registration successful!");
         window.location.href = "/details";
       }
     } catch (error) {

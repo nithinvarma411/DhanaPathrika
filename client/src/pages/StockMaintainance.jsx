@@ -22,7 +22,7 @@ function StockMaintainance() {
     const fetchStock = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/v1/stock/getStock`,
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/getStock`,
           { withCredentials: true }
         );
 
@@ -79,7 +79,7 @@ function StockMaintainance() {
     }
 
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/stock/update/${id}`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/update/${id}`,
         formattedData,
         { withCredentials: true }
       );
@@ -121,7 +121,7 @@ function StockMaintainance() {
     if (result.isConfirmed) {
       try {
         const response = await axios.delete(
-          `${import.meta.env.VITE_BACKEND_URL}/api/v1/stock/delete/${id}`,
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/delete/${id}`,
           { withCredentials: true }
         );
 

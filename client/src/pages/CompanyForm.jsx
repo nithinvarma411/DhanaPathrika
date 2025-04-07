@@ -39,9 +39,9 @@ export default function CompanyForm() {
   
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/profile/addProfile`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/profile/addProfile`,
         data,
-        { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true } // Ensure cookies are sent
+        { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
       );
       toast.success(response.data.message);
     } catch (error) {

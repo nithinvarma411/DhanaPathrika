@@ -21,7 +21,6 @@ const InvoiceGenerator = () => {
     const { name, value } = e.target;
 
     if (index !== null) {
-      // Updating specific item in the items array
       const updatedItems = [...formData.items];
       updatedItems[index][name] = value;
       setFormData((prevState) => ({
@@ -29,7 +28,6 @@ const InvoiceGenerator = () => {
         items: updatedItems,
       }));
     } else {
-      // Updating other fields
       setFormData((prevState) => ({
         ...prevState,
         [name]: value,
@@ -66,7 +64,7 @@ const InvoiceGenerator = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/invoice/createInvoice`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/createInvoice`,
         invoiceData,
         { withCredentials: true }
       );
@@ -87,8 +85,6 @@ const InvoiceGenerator = () => {
       );
     }
   };
-
-  // Check if the first item is filled
   const isFirstItemFilled =
     formData.items[0].itemName.trim() !== "" &&
     formData.items[0].amountPerItem.trim() !== "" &&

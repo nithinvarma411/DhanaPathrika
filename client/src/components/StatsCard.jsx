@@ -5,11 +5,11 @@ const StatsCard = ({ title, value, change, isPositive }) => {
   return (
     <motion.div
       whileHover={{
-        scale: 1.05,       // Slight zoom effect
-        y: -3,           // Moves the card upward
-        boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)", // Adds depth
+        scale: 1.05,
+        y: -3,
+        boxShadow: "0px 10px 20px rgba(0, 0, 0, 0.2)",
       }}
-      transition={{ type: "spring", stiffness: 200, damping: 10 }} // Smooth transition
+      transition={{ type: "spring", stiffness: 200, damping: 10 }}
       className="bg-[#5e2e2e] backdrop-blur rounded-lg p-4 flex-1 min-w-64"
     >
       <h2 className="text-xl">{title}</h2>

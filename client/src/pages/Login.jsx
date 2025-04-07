@@ -39,7 +39,7 @@ const Login = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/login`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/user/login`,
         {
           NumberOrEmail,
           Password: password,
@@ -63,7 +63,7 @@ const Login = () => {
   const handleGoogleLogin = async () => {
     if (loading) return;
     setLoading(true);
-    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google`;
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}auth/google`;
   };
 
   return (

@@ -7,7 +7,7 @@ import BillingTable from '../components/BillingTable';
 const BillingPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
-  const [selectedTab, setSelectedTab] = useState("Overview"); // Added state for tabs
+  const [selectedTab, setSelectedTab] = useState("Overview");
 
   return (
     <div className="container mx-auto px-4 py-6">

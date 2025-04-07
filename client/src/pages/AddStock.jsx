@@ -20,7 +20,7 @@ const AddStock = () => {
 
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/stock/addStock`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/addStock`,
         {
           ItemName: itemName,
           AvailableQuantity: availableQuantity,

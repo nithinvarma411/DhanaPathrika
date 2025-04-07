@@ -9,8 +9,8 @@ const BillingSearchFilter = ({ setSearchQuery, setSelectedDate }) => {
   };
 
   const clearDateFilter = () => {
-    setDate(""); // Reset local state
-    setSelectedDate(""); // Clear date filter in parent
+    setDate("");
+    setSelectedDate("");
   };
 
   return (

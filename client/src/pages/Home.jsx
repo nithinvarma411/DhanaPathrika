@@ -11,16 +11,16 @@ import { toast } from "react-toastify";
 const Home = () => {
   const [invoices, setInvoices] = useState([]);
   const [loading, setLoading] = useState(true);
-  const hasFetchedOnce = useRef(false); // 👈 useRef to track first call
+  const hasFetchedOnce = useRef(false);
 
   useEffect(() => {
-    if (hasFetchedOnce.current) return; // 👈 prevent multiple calls
+    if (hasFetchedOnce.current) return;
     hasFetchedOnce.current = true;
 
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/v1/invoice/getInvoices`,
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/getInvoices`,
           { withCredentials: true }
         );
 

@@ -7,13 +7,13 @@ const ProfileSection = () => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
-  const toastShown = useRef(false); // Track if toast has been shown
+  const toastShown = useRef(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}/api/v1/profile/getProfile`,
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/profile/getProfile`,
           { withCredentials: true }
         );
         setProfile(response.data.profile);
@@ -21,7 +21,7 @@ const ProfileSection = () => {
 
         if (!toastShown.current) {
           toast.success(response.data.message);
-          toastShown.current = true; // Prevent multiple toasts
+          toastShown.current = true;
         }
       } catch (error) {
         if (!toastShown.current) {
@@ -40,7 +40,7 @@ const ProfileSection = () => {
   const handleSaveClick = async () => {
     try {
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/profile/updateProfile`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/profile/updateProfile`,
         formData,
         { withCredentials: true }
       );

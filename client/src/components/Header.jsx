@@ -22,16 +22,16 @@ const Header = () => {
 
   const fetchNotifications = async () => {
     try {
-      if (hasFetched.current) return; // Prevent multiple calls
-      hasFetched.current = true; // Mark as called
+      if (hasFetched.current) return;
+      hasFetched.current = true;
 
       const invoiceResponse = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/invoice/getInvoices`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/getInvoices`,
         { withCredentials: true }
       );
 
       const stockResponse = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/stock/getStock`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/getStock`,
         { withCredentials: true }
       );
 
@@ -110,7 +110,7 @@ const Header = () => {
     if (result.isConfirmed) {
       try {
         await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/logout`,
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/user/logout`,
           {},
           { withCredentials: true }
         );
@@ -159,7 +159,7 @@ const Header = () => {
         <div className="flex items-center relative">
           {/* Notification Icon */}
           <button
-            className="mx-4 p-2 rounded-md hover:bg-gray-600 transition relative"
+            className="mx-4 p-2 rounded-md hover:bg-red-500 transition relative"
             onClick={toggleNotifications}
           >
             <svg

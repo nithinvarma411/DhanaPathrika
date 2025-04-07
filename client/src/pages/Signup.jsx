@@ -44,7 +44,7 @@ const Signup = () => {
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/register`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/user/register`,
         { MobileNumber: mobileNumber, Email: email, Password: password },
         { withCredentials: true }
       );
@@ -63,7 +63,7 @@ const Signup = () => {
   const handleGoogleLogin = async () => {
     if (loading) return;
     setLoading(true);
-    window.location.href = `${import.meta.env.VITE_BACKEND_URL}/auth/google`;
+    window.location.href = `${import.meta.env.VITE_BACKEND_URL}auth/google`;
   };
 
   return (

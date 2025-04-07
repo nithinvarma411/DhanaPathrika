@@ -15,6 +15,7 @@ function StockMaintainance() {
   const [loading, setLoading] = useState(true);
   const [filteredItems, setFilteredItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [actionLoading, setActionLoading] = useState(null);
 
   const navigate = useNavigate();
 
@@ -57,8 +58,9 @@ function StockMaintainance() {
   };
 
   const handleSave = async (id) => {
-    try {
+    setActionLoading(id); // Start loading
 
+    try {
       const formattedData = {
         ItemName: editedData.ItemName,
         CostPrice: Number(editedData.CostPrice),
@@ -69,14 +71,15 @@ function StockMaintainance() {
 
       if (
         typeof formattedData.ItemName !== "string" ||
-        typeof formattedData.CostPrice !== "number" || isNaN(formattedData.CostPrice) ||
-        typeof formattedData.SellingPrice !== "number" || isNaN(formattedData.SellingPrice) ||
-        typeof formattedData.AvailableQuantity !== "number" || isNaN(formattedData.AvailableQuantity) ||
-        typeof formattedData.MinQuantity !== "number" || isNaN(formattedData.MinQuantity)
-    ) {
-      toast.error("Invalid data type. Please enter valid values.")
-      return
-    }
+        isNaN(formattedData.CostPrice) ||
+        isNaN(formattedData.SellingPrice) ||
+        isNaN(formattedData.AvailableQuantity) ||
+        isNaN(formattedData.MinQuantity)
+      ) {
+        toast.error("Invalid data type. Please enter valid values.");
+        setActionLoading(null);
+        return;
+      }
 
       const response = await axios.put(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/update/${id}`,
@@ -93,14 +96,14 @@ function StockMaintainance() {
         setEditingRow(null);
         setIsEditing(false);
         toast.success(response.data.message);
+        window.location.reload();
       } else {
-        console.error(response.data);
         toast.error(response.data.message);
       }
     } catch (error) {
-      console.error(error.response.data.message);
-      toast.error(error.response.data.message);
-      // toast.error(error.message)
+      toast.error(error?.response?.data?.message || "Error while saving");
+    } finally {
+      setActionLoading(null); // End loading
     }
   };
 
@@ -127,7 +130,11 @@ function StockMaintainance() {
 
         if (response.status === 200) {
           setItems((prevItems) => prevItems.filter((item) => item._id !== id));
-          Swal.fire("Deleted!", "Your item has been deleted.", "success");
+          Swal.fire("Deleted!", "Your item has been deleted.", "success").then(
+            () => {
+              window.location.reload();
+            }
+          );
           toast.success(response.data.message);
         } else {
           Swal.fire("Error!", response.data.message, "error");
@@ -136,6 +143,8 @@ function StockMaintainance() {
       } catch (error) {
         Swal.fire("Error!", "Something went wrong.", error);
         toast.error(error.response.data.message);
+      } finally {
+        setActionLoading(null);
       }
     }
   };
@@ -174,7 +183,7 @@ function StockMaintainance() {
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-2xl text-red-700 font-bold">Item Form :</h2>
               <button
-                onClick={() => (navigate('/add-stock'))}
+                onClick={() => navigate("/add-stock")}
                 className={`px-4 py-2 rounded-md flex items-center ${
                   isEditing
                     ? "bg-gray-300 text-gray-800 cursor-not-allowed"
@@ -288,10 +297,15 @@ function StockMaintainance() {
                         <div className="flex justify-center space-x-2">
                           {editingRow === index ? (
                             <button
-                              className="px-4 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white"
+                              className="px-4 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white flex items-center"
                               onClick={() => handleSave(item._id)}
+                              disabled={actionLoading === item._id}
                             >
-                              Save
+                              {actionLoading === item._id ? (
+                                <ClipLoader size={15} color="#fff" />
+                              ) : (
+                                "Save"
+                              )}
                             </button>
                           ) : (
                             <button
@@ -306,16 +320,24 @@ function StockMaintainance() {
                               Edit
                             </button>
                           )}
+
                           <button
                             className={`px-4 py-1 rounded ${
                               isEditing && editingRow !== index
                                 ? "bg-gray-300 text-gray-800 cursor-not-allowed"
                                 : "bg-red-500 hover:bg-red-600 text-white"
-                            }`}
-                            disabled={isEditing && editingRow !== index}
+                            } flex items-center`}
+                            disabled={
+                              (isEditing && editingRow !== index) ||
+                              actionLoading === item._id
+                            }
                             onClick={() => handleDelete(item._id)}
                           >
-                            Delete
+                            {actionLoading === item._id ? (
+                              <ClipLoader size={15} color="#fff" />
+                            ) : (
+                              "Delete"
+                            )}
                           </button>
                         </div>
                       </td>

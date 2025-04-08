@@ -2,6 +2,8 @@ import dotenv from 'dotenv';
 dotenv.config();
 import connectDB from './db/db.js';
 import express from 'express';
+import cron from 'node-cron';
+import axios from 'axios';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import passport from 'passport';
@@ -37,9 +39,16 @@ app.use("/api/v1/profile", authenticate, profileRouter);
 
 // Google OAuth routes
 import { googleAuth, googleAuthCallback, googleAuthSuccess } from '../src/controllers/user.controller.js';
+import { axios } from 'axios';
 
 app.get("/auth/google", googleAuth);
 app.get("/auth/google/callback", googleAuthCallback, googleAuthSuccess);
+
+cron.schedule('*/10 * * * *', () => {
+    axios.get(process.env.BACKEND_URL)
+      .then(() => console.log('✅ Pinged self to stay awake'))
+      .catch(err => console.error('❌ Ping failed:', err.message));
+  });
 
 connectDB()
     .then(() => {

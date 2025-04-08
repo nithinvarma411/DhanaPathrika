@@ -123,9 +123,9 @@ const login = async (req, res) => {
     }
 };
 
-const googleAuth = passport.authenticate('google', { 
-    scope: ['profile', 'email'], 
-    prompt: 'select_account consent' 
+const googleAuth = passport.authenticate('google', {
+    scope: ['profile', 'email'],
+    prompt: 'select_account consent'
 });
 
 
@@ -151,7 +151,12 @@ const googleAuthSuccess = (req, res) => {
     });
 
     // Check if the user is new
-    const redirectURL = req.user.isNewUser ? "http://localhost:5173/details" : "http://localhost:5173/home";
+    const baseURL = process.env.NODE_ENV === "development"
+        ? "http://localhost:5173"
+        : `${process.env.ORIGIN}`;
+
+    const redirectURL = req.user.isNewUser ? `${baseURL}/details` : `${baseURL}/home`;
+
 
     res.redirect(redirectURL);
 };

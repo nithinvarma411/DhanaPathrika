@@ -39,7 +39,6 @@ app.use("/api/v1/profile", authenticate, profileRouter);
 
 // Google OAuth routes
 import { googleAuth, googleAuthCallback, googleAuthSuccess } from '../src/controllers/user.controller.js';
-import { axios } from 'axios';
 
 app.get("/auth/google", googleAuth);
 app.get("/auth/google/callback", googleAuthCallback, googleAuthSuccess);

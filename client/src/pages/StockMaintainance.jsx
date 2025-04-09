@@ -167,7 +167,7 @@ function StockMaintainance() {
 
         {loading ? (
           <div className="flex justify-center items-center h-screen">
-            <ClipLoader size={100} color={"#123abc"} loading={loading} />
+            <ClipLoader size={100} color={"white"} loading={loading} />
           </div>
         ) : (
           <div className="bg-white rounded-lg p-6 mt-4 shadow-lg">

@@ -14,22 +14,44 @@ const InvoicePage = () => {
   const hasFetchedProfile = useRef(false);
 
   useEffect(() => {
+    const fetchLatestInvoice = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/latest-invoice`,
+          { withCredentials: true }
+        );
+        setInvoice(response.data.invoice);
+      } catch (error) {
+        console.error("Error fetching invoice:", error);
+      }
+    };
+  
     if (!hasFetchedInvoice.current) {
       hasFetchedInvoice.current = true;
-      axios.get(`${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/latest-invoice`, { withCredentials: true })
-        .then(response => setInvoice(response.data.invoice))
-        .catch(error => console.error("Error fetching invoice:", error));
+      fetchLatestInvoice();
     }
   }, []);
+  
 
   useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/profile/getProfile`,
+          { withCredentials: true }
+        );
+        setProfile(response.data.profile);
+      } catch (error) {
+        console.error("Error fetching profile:", error);
+      }
+    };
+  
     if (!hasFetchedProfile.current) {
       hasFetchedProfile.current = true;
-      axios.get(`${import.meta.env.VITE_BACKEND_URL}api/v1/profile/getProfile`, { withCredentials: true })
-        .then(response => setProfile(response.data.profile))
-        .catch(error => console.error("Error fetching profile:", error));
+      fetchProfile();
     }
   }, []);
+  
 
   const downloadInvoice = async () => {
     if (!invoiceRef.current) return;

@@ -24,7 +24,7 @@ const createInvoice = async (req, res) => {
                 return res.status(404).send({ "message": `Stock item '${item.Name}' not found, Please check the spelling it must be exactly same` });
             }
 
-            console.log(stockItem.AvailableQuantity, item.Quantity);
+            // console.log(stockItem.AvailableQuantity, item.Quantity);
             
 
             if (stockItem.AvailableQuantity < item.Quantity) {

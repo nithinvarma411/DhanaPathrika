@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { ClipLoader } from "react-spinners";
 import Invoice from "./Invoice";
+import DomToImage from "dom-to-image";
 
 const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   const [billingData, setBillingData] = useState([]);
@@ -14,6 +15,8 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const toastShown = useRef(false);
   const profileShown = useRef(false);
+  const invoiceRef = useRef(null);
+  const [monthFilter, setMonthFilter] = useState("This Month");
 
   useEffect(() => {
     if (!profileShown.current) {
@@ -92,7 +95,9 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
     try {
       await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/updateInvoice/${invoiceId}`,
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }api/v1/invoice/updateInvoice/${invoiceId}`,
         updatedInvoice,
         { withCredentials: true }
       );
@@ -121,7 +126,41 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     }
   };
 
+  const handleDownload = () => {
+    if (invoiceRef.current) {
+      DomToImage.toJpeg(invoiceRef.current, { quality: 0.95 })
+        .then((dataUrl) => {
+          const link = document.createElement("a");
+          link.download = "invoice.jpeg";
+          link.href = dataUrl;
+          link.click();
+        })
+        .catch((error) => {
+          console.error("Error downloading invoice:", error);
+          toast.error("Failed to download image");
+        });
+    }
+  };
+
   const filteredData = billingData.filter((invoice) => {
+    const invoiceDate = new Date(invoice.Date);
+    const currentDate = new Date();
+
+    // Match month filter
+    let matchesMonth = true;
+    if (monthFilter !== "This Month") {
+      const selectedMonthDiff = parseInt(monthFilter.split(" ")[0]); // e.g., "2 Months Ago" => 2
+      const filterDate = new Date();
+      filterDate.setMonth(currentDate.getMonth() - selectedMonthDiff);
+      matchesMonth =
+        invoiceDate.getMonth() === filterDate.getMonth() &&
+        invoiceDate.getFullYear() === filterDate.getFullYear();
+    } else {
+      matchesMonth =
+        invoiceDate.getMonth() === currentDate.getMonth() &&
+        invoiceDate.getFullYear() === currentDate.getFullYear();
+    }
+
     const matchesSearch =
       invoice._id.toLowerCase().includes(searchQuery) ||
       invoice.CustomerName.toLowerCase().includes(searchQuery) ||
@@ -138,7 +177,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         ? invoice.IsDue
         : !invoice.IsDue;
 
-    return matchesSearch && matchesDate && matchesTab;
+    return matchesSearch && matchesDate && matchesTab && matchesMonth;
   });
 
   if (loading) {
@@ -153,6 +192,50 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     <>
       <div className="overflow-x-auto">
         <div className="w-full max-w-full">
+          <div className="p-4">
+            {/* Month Filter Buttons */}
+            <div className="flex flex-wrap gap-2 mb-4">
+              {[
+                "This Month",
+                "1 Month Ago",
+                "2 Months Ago",
+                "3 Months Ago",
+                "4 Months Ago",
+                "5 Months Ago",
+              ].map((label, index) => (
+                <button
+                  key={index}
+                  onClick={() => setMonthFilter(label)}
+                  className={`px-3 py-1 rounded border text-sm ${
+                    monthFilter === label
+                      ? "bg-blue-500 text-white"
+                      : "bg-white text-gray-800"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Table or No Data Message */}
+            {filteredData.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full text-sm border border-gray-300">
+                  <thead className="bg-gray-100">{/* header columns */}</thead>
+                  <tbody>
+                    {filteredData.map((item, index) => (
+                      <tr key={index}>{/* row data */}</tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-center text-gray-500 mt-4 text-sm">
+                No data found for "{monthFilter}"
+              </p>
+            )}
+          </div>
+
           <table className="w-full border-collapse text-sm md:text-base">
             <thead className="bg-gray-50 border-b">
               <tr>
@@ -260,15 +343,25 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
       {/* Modal for Invoice */}
       {showInvoiceModal && selectedInvoice && (
-        <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center">
-          <div className="bg-white p-6 rounded shadow-lg w-[90%] max-w-4xl relative">
+        <div className="fixed inset-0 z-50 bg-black/50 flex justify-center items-center overflow-y-auto">
+          <div className="bg-white p-6 rounded shadow-lg w-[90%] max-w-4xl relative my-8 max-h-[90vh] overflow-y-auto scrollbar-hide">
             <button
-              className="absolute top-2 right-3 text-gray-500 hover:text-black text-xl"
+              className="absolute top-2 right-3 text-gray-500 hover:text-black text-3xl"
               onClick={() => setShowInvoiceModal(false)}
             >
               &times;
             </button>
-            <Invoice invoice={selectedInvoice} profile={profile} />
+            <div ref={invoiceRef}>
+              <Invoice invoice={selectedInvoice} profile={profile} />
+            </div>
+            <div className="flex justify-center mt-4">
+              <button
+                className="px-4 py-2 bg-red-400 text-white rounded hover:bg-red-600"
+                onClick={handleDownload}
+              >
+                Download
+              </button>
+            </div>
           </div>
         </div>
       )}

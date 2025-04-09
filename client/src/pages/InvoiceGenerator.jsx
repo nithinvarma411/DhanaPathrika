@@ -8,6 +8,8 @@ import Header from "../components/Header";
 
 const InvoiceGenerator = () => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
+
   const [formData, setFormData] = useState({
     customerName: "",
     customerEmail: "",
@@ -44,6 +46,7 @@ const InvoiceGenerator = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
 
     const invoiceData = {
       CustomerName: formData.customerName,
@@ -83,6 +86,8 @@ const InvoiceGenerator = () => {
       toast.error(
         error.response?.data?.message || "Something went wrong. Try again!"
       );
+    } finally {
+      setIsLoading(false);
     }
   };
   const isFirstItemFilled =
@@ -193,8 +198,9 @@ const InvoiceGenerator = () => {
               <button
                 type="submit"
                 className="bg-[#c21a1a] text-white py-3 px-6 rounded-full hover:bg-[#dc1414] transition duration-300"
+                disabled={isLoading}
               >
-                Generate
+                {isLoading ? "Generating..." : "Generate"}
               </button>
             </div>
           </form>

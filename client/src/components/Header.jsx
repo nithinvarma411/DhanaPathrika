@@ -36,7 +36,6 @@ const Header = () => {
       );
 
       // console.log(stockResponse);
-      
 
       const invoices = invoiceResponse.data.invoices;
       const stocks = stockResponse.data;
@@ -208,12 +207,14 @@ const Header = () => {
                     <li className="p-2 font-bold text-red-600">
                       Overdue Invoices
                     </li>
-                    {notifications.overdueInvoices.map((invoice, index) => (
-                      <li key={index} className="p-2 hover:bg-gray-100">
-                        {invoice.name} - ₹{invoice.amount} due on{" "}
-                        {invoice.dueDate}
-                      </li>
-                    ))}
+                    {notifications.overdueInvoices
+                      .slice(0, 2)
+                      .map((invoice, index) => (
+                        <li key={index} className="p-2 hover:bg-gray-100">
+                          {invoice.name} - ₹{invoice.amount} due on{" "}
+                          {invoice.dueDate}
+                        </li>
+                      ))}
                   </>
                 ) : (
                   <li className="p-2 text-gray-500">No overdue invoices</li>
@@ -225,12 +226,14 @@ const Header = () => {
                     <li className="p-2 font-bold text-yellow-600">
                       Low Stock Items
                     </li>
-                    {notifications.lowStockItems.map((stock, index) => (
-                      <li key={index} className="p-2 hover:bg-gray-100">
-                        {stock.name}: {stock.available} left (Min:{" "}
-                        {stock.minRequired})
-                      </li>
-                    ))}
+                    {notifications.lowStockItems
+                      .slice(0, 2)
+                      .map((stock, index) => (
+                        <li key={index} className="p-2 hover:bg-gray-100">
+                          {stock.name}: {stock.available} left (Min:{" "}
+                          {stock.minRequired})
+                        </li>
+                      ))}
                   </>
                 ) : (
                   <li className="p-2 text-gray-500">
@@ -239,9 +242,12 @@ const Header = () => {
                 )}
               </ul>
 
-              <div className="p-2 text-center border-t text-blue-500 hover:underline cursor-pointer">
+              <Link
+                to="/notification"
+                className="p-2 text-center border-t text-blue-500 hover:underline cursor-pointer block"
+              >
                 View all
-              </div>
+              </Link>
             </div>
           )}
 
@@ -299,6 +305,12 @@ const Header = () => {
               className="block hover:bg-[#a05e5e61] p-2 rounded"
             >
               Bills
+            </Link>
+            <Link
+              to="/notification"
+              className="block hover:bg-[#a05e5e61] p-2 rounded"
+            >
+              Notification
             </Link>
           </ul>
           <button

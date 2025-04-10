@@ -13,6 +13,9 @@ import InvoiceGenerator from './pages/InvoiceGenerator';
 import StockMaintainance from './pages/StockMaintainance';
 import AddStock from './pages/AddStock';
 import NotFound from './pages/NotFound';
+import JoinSandbox from './pages/JoinSandbox';
+import SendMessage from './pages/SendMessage';
+import Notification from './pages/Notification';
 
 function App() {
 
@@ -28,7 +31,10 @@ function App() {
         <Route path='/invoice-generator' element={<InvoiceGenerator/>} />
         <Route path='/invoice' element={<InvoicePage/>} />
         <Route path='/stock-maintenance' element={<StockMaintainance/>} />
+        <Route path='/notification' element={<Notification/>} />
         <Route path='/add-stock' element={<AddStock/>} />
+        {/* <Route path='/join' element={<JoinSandbox/>} />
+        <Route path='/send' element={<SendMessage/>} /> */}
         <Route path='*' element={<NotFound />} />
       </Routes>
       <ToastContainer position="top-right" autoClose={1000} />

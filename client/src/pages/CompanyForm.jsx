@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import bg from "../assets/bg.jpg";
 import logo from "../assets/logo.jpg";
+import { useNavigate } from "react-router-dom";
 
 export default function CompanyForm() {
   const [formData, setFormData] = useState({
@@ -15,6 +16,7 @@ export default function CompanyForm() {
     image: null,
   });
   const [preview, setPreview] = useState(null);
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -44,6 +46,7 @@ export default function CompanyForm() {
         { headers: { "Content-Type": "multipart/form-data" }, withCredentials: true }
       );
       toast.success(response.data.message);
+      navigate("/home")
     } catch (error) {
       toast.error(error.response?.data?.message || "Something went wrong");
     }

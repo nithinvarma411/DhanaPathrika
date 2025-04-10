@@ -228,7 +228,7 @@ function StockMaintainance() {
                       <td className="border border-gray-300 px-4 py-2">
                         {index + 1}
                       </td>
-                      <td className="border border-gray-300 px-4 py-2">
+                      <td className="border border-gray-300 overflow-x-auto px-4 py-2">
                         <input
                           type="text"
                           className="w-full focus:outline-none"

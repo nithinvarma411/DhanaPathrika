@@ -92,7 +92,7 @@ const Notification = () => {
       <Header />
       {loading ? (
         <div className="flex justify-center items-center h-[80vh]">
-          <ClipLoader size={80} color="#c21807" loading={loading} />
+          <ClipLoader size={100} color="white" loading={loading} />
         </div>
       ) : (
         <div className="flex flex-wrap justify-center gap-8 p-6 max-h-[90vh] overflow-y-auto scrollbar-hide">

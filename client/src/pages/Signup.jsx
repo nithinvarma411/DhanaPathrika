@@ -18,6 +18,8 @@ const Signup = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [enteredOtp, setEnteredOtp] = useState("");
 
   const validateInput = () => {
     const mobileRegex = /^[6-9]\d{9}$/;
@@ -27,7 +29,6 @@ const Signup = () => {
       toast.error("All fields are required");
       return false;
     }
-
     if (!mobileRegex.test(mobileNumber)) {
       toast.error("Invalid mobile number");
       return false;
@@ -39,22 +40,61 @@ const Signup = () => {
     return true;
   };
 
-  const sendResponse = async () => {
+  const sendOtp = async () => {
     if (!validateInput() || loading) return;
     setLoading(true);
     try {
       const response = await axios.post(
-        `${import.meta.env.VITE_BACKEND_URL}api/v1/user/register`,
-        { MobileNumber: mobileNumber, Email: email, Password: password },
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/verify/sendotp`,
+        { Email: email },
         { withCredentials: true }
       );
-
       if (response.status === 200) {
-        window.location.href = "/details";
+        setOtpSent(true);
+        toast.success("OTP sent to your email!");
       }
     } catch (error) {
       console.error(error);
-      toast.error(error.response?.data?.message || "Registration failed.");
+      toast.error(error.response?.data?.message || "Failed to send OTP.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const verifyOtpAndRegister = async () => {
+    if (!enteredOtp) {
+      toast.error("Please enter OTP");
+      return;
+    }
+    setLoading(true);
+    try {
+      const otpRes = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/verify/verifyotp`,
+        { Email: email, otp: enteredOtp },
+        { withCredentials: true }
+      );
+
+      if (otpRes.status === 200) {
+        toast.success("Email verified successfully!");
+
+        const registerRes = await axios.post(
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/user/register`,
+          {
+            MobileNumber: mobileNumber,
+            Email: email,
+            Password: password,
+          },
+          { withCredentials: true }
+        );
+
+        if (registerRes.status === 200) {
+          toast.success("Registered successfully!");
+          window.location.href = "/details";
+        }
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Invalid OTP or Registration failed.");
     } finally {
       setLoading(false);
     }
@@ -72,11 +112,7 @@ const Signup = () => {
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 flex items-center z-10">
-        <img
-          src={logoImage}
-          alt="Logo"
-          className="w-8 h-8 md:w-10 md:h-10 mr-2"
-        />
+        <img src={logoImage} alt="Logo" className="w-8 h-8 md:w-10 md:h-10 mr-2" />
         <div className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-300 to-pink-300 drop-shadow-lg text-lg md:text-3xl font-bold tracking-wide flex items-center">
           {welcomeText.map((word, index) => (
             <motion.span
@@ -99,123 +135,132 @@ const Signup = () => {
           transition={{ duration: 0.5 }}
           className="hidden md:flex md:w-1/2 items-center justify-center"
         >
-          <img
-            src={mainImage}
-            alt="Illustration"
-            className="w-150 h-90 rounded-4xl"
-          />
+          <img src={mainImage} alt="Illustration" className="w-150 h-90 rounded-4xl" />
         </motion.div>
 
         <div className="w-full md:w-2/3 bg-white shadow-lg rounded-lg p-6 md:p-8">
           <h1 className="text-2xl font-bold mb-6 text-[#882834] flex justify-center">
-            Create an Account
+            {otpSent ? "Verify Your Email" : "Create an Account"}
           </h1>
 
-          <form className="space-y-6">
-            {/* Mobile Number Field */}
-            <div className="relative">
-              <label
-                htmlFor="mobile"
-                className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
-              >
-                Mobile No.
-              </label>
-              <input
-                type="text"
-                id="mobile"
-                value={mobileNumber}
-                onChange={(e) => setMobileNumber(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
-              />
-            </div>
+          {!otpSent ? (
+            <form className="space-y-6">
+              <div className="relative">
+                <label htmlFor="mobile" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                  Mobile No.
+                </label>
+                <input
+                  type="text"
+                  id="mobile"
+                  value={mobileNumber}
+                  onChange={(e) => setMobileNumber(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
 
-            {/* Email Field */}
-            <div className="relative">
-              <label
-                htmlFor="email"
-                className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
-              >
-                Email
-              </label>
-              <input
-                type="text"
-                id="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
-              />
-            </div>
+              <div className="relative">
+                <label htmlFor="email" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                  Email
+                </label>
+                <input
+                  type="text"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+              </div>
 
-            {/* Password Field */}
-            <div className="relative">
-              <label
-                htmlFor="password"
-                className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
-              >
-                Password
-              </label>
-              <input
-                type={showPassword ? "text" : "password"}
-                id="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
-              />
-              <button
+              <div className="relative">
+                <label htmlFor="password" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                  Password
+                </label>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3 text-gray-500"
+                >
+                  {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                </button>
+              </div>
+
+              <motion.button
                 type="button"
-                onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-3 text-gray-500"
+                onClick={sendOtp}
+                disabled={loading}
+                whileHover={!loading ? { scale: 1.05 } : {}}
+                whileTap={!loading ? { scale: 0.95 } : {}}
+                className={`w-full py-3 rounded-lg ${
+                  loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600"
+                } text-white`}
               >
-                {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-              </button>
+                {loading ? "Sending OTP..." : "Send OTP"}
+              </motion.button>
+            </form>
+          ) : (
+            <div className="space-y-6">
+              <div className="relative">
+                <label htmlFor="otp" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                  Enter OTP
+                </label>
+                <input
+                  type="text"
+                  id="otp"
+                  value={enteredOtp}
+                  onChange={(e) => setEnteredOtp(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
+                  maxLength={6}
+                />
+              </div>
+
+              <motion.button
+                type="button"
+                onClick={verifyOtpAndRegister}
+                disabled={loading}
+                whileHover={!loading ? { scale: 1.05 } : {}}
+                whileTap={!loading ? { scale: 0.95 } : {}}
+                className={`w-full py-3 rounded-lg ${
+                  loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+                } text-white`}
+              >
+                {loading ? "Verifying..." : "Verify & Register"}
+              </motion.button>
             </div>
+          )}
 
-            <motion.button
-              type="button"
-              onClick={sendResponse}
-              disabled={loading}
-              whileHover={!loading ? { scale: 1.05 } : {}}
-              whileTap={!loading ? { scale: 0.95 } : {}}
-              className={`w-full py-3 rounded-lg ${
-                loading
-                  ? "bg-gray-400 cursor-not-allowed"
-                  : "bg-red-500 hover:bg-red-600"
-              } text-white`}
-            >
-              {loading ? "Processing..." : "Sign Up"}
-            </motion.button>
-          </form>
+          {!otpSent && (
+            <>
+              <div className="my-4 text-center text-gray-500">OR</div>
+              <div className="space-y-3">
+                <motion.button
+                  onClick={handleGoogleLogin}
+                  disabled={loading}
+                  whileHover={!loading ? { scale: 1.05 } : {}}
+                  whileTap={!loading ? { scale: 0.95 } : {}}
+                  className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+                >
+                  <img src={googleIcon} alt="Continue with Google" className="w-5 h-5 mr-2" />
+                  {loading ? "Processing..." : "Continue with Google"}
+                </motion.button>
 
-          <div className="my-4 text-center text-gray-500">OR</div>
-          <div className="space-y-3">
-            <motion.button
-              onClick={handleGoogleLogin}
-              disabled={loading}
-              whileHover={!loading ? { scale: 1.05 } : {}}
-              whileTap={!loading ? { scale: 0.95 } : {}}
-              className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <img
-                src={googleIcon}
-                alt="Continue with Google"
-                className="w-5 h-5 mr-2"
-              />
-              {loading ? "Processing..." : "Continue with Google"}
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md"
-            >
-              <img
-                src={appleIcon}
-                alt="Continue with Apple"
-                className="w-5 h-5 mr-2"
-              />
-              Continue with Apple
-            </motion.button>
-          </div>
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md"
+                >
+                  <img src={appleIcon} alt="Continue with Apple" className="w-5 h-5 mr-2" />
+                  Continue with Apple
+                </motion.button>
+              </div>
+            </>
+          )}
 
           <p className="text-center text-sm mt-4 text-gray-600">
             Already have an account?{" "}

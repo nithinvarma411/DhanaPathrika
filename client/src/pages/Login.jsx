@@ -47,7 +47,7 @@ const Login = () => {
         { withCredentials: true }
       );
 
-      toast.success(response.data.message || "Registration successful!");     
+      toast.success(response.data.message || "Registration successful!");
       window.location.href = "/home";
     } catch (error) {
       console.error(error);
@@ -151,6 +151,10 @@ const Login = () => {
               >
                 {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
               </button>
+            </div>
+
+            <div className="text-right text-sm text-blue-600 hover:underline cursor-pointer">
+              <Link to="/password-recovery">Forgot Password?</Link>
             </div>
 
             <motion.button

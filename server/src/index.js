@@ -32,8 +32,12 @@ import stockRouter from '../src/routes/stock.routes.js';
 import invoiceRouter from '../src/routes/invoice.routes.js';
 import profileRouter from '../src/routes/profile.routes.js';
 import twilioRouter from '../src/routes/twilio.routes.js';
+import resetpassRouter from '../src/routes/resetpass.router.js';
+import verifyRouter from '../src/routes/verify.routes.js';
 
 app.use("/api/v1/user", userRouter);
+app.use("/api/v1/reset", resetpassRouter);
+app.use("/api/v1/verify", verifyRouter);
 app.use("/api/v1/stock", authenticate, stockRouter);
 app.use("/api/v1/invoice", authenticate, invoiceRouter);
 app.use("/api/v1/profile", authenticate, profileRouter);

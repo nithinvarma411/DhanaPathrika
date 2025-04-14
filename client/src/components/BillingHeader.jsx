@@ -30,7 +30,7 @@ const BillingHeader = () => {
     if (result.isConfirmed) {
       try {
         await axios.post(
-          `${import.meta.env.VITE_BACKEND_URL}/api/v1/user/logout`,
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/user/logout`,
           {},
           { withCredentials: true }
         );

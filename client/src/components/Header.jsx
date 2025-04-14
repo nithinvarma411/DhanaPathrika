@@ -13,6 +13,11 @@ const Header = () => {
     overdueInvoices: [],
     lowStockItems: [],
   });
+  const [isFormVisible, setIsFormVisible] = useState(false);
+
+  const toggleForm = () => {
+    setIsFormVisible(!isFormVisible);
+  };
 
   const hasFetched = useRef(false);
 
@@ -312,6 +317,12 @@ const Header = () => {
             >
               Notification
             </Link>
+            <button
+              className="block hover:bg-[#a05e5e61] p-2 rounded"
+              onClick={toggleForm}
+            >
+              Connect with Developer
+            </button>
           </ul>
           <button
             className="mt-6 flex items-center text-white"
@@ -335,6 +346,66 @@ const Header = () => {
           </button>
         </div>
       </div>
+      {isFormVisible && (
+        <form
+          action="https://formsubmit.co/660483230467b21e118e9ec14a39901d?redirect=/home"
+          method="POST"
+          className="fixed top-0 left-0 right-0 bottom-0 flex justify-center items-center bg-transparent bg-opacity-40 z-50"
+        >
+          <div className="bg-white p-6 rounded-lg shadow-xl w-96 transform transition-all duration-300 scale-100 opacity-100">
+            <button
+              type="button"
+              onClick={() => setIsFormVisible(false)}
+              className="absolute top-2 right-2 p-2 text-gray-500 hover:text-gray-800 transition"
+            >
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                ></path>
+              </svg>
+            </button>
+            <h2 className="text-xl font-semibold text-center mb-4 text-black">
+              Contact Us
+            </h2>
+            <input
+              type="text"
+              name="name"
+              placeholder="Your Name"
+              required
+              className="w-full mb-4 p-3 border rounded-md shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <input
+              type="email"
+              name="email"
+              placeholder="Your Email"
+              required
+              className="w-full mb-4 p-3 border rounded-md shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+            <textarea
+              name="message"
+              placeholder="Your Message"
+              required
+              rows="4"
+              className="w-full mb-4 p-3 border rounded-md shadow-sm text-black focus:outline-none focus:ring-2 focus:ring-blue-500"
+            ></textarea>
+            <button
+              type="submit"
+              className="w-full p-3 bg-blue-500 text-white rounded-md shadow-sm hover:bg-blue-600 transition"
+            >
+              Send Message
+            </button>
+          </div>
+        </form>
+      )}
     </div>
   );
 };

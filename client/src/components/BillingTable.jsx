@@ -215,6 +215,18 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                   {label}
                 </button>
               ))}
+
+              {/* Show All button */}
+              <button
+                onClick={() => setMonthFilter("Show All")}
+                className={`px-3 py-1 rounded border text-sm ${
+                  monthFilter === "Show All"
+                    ? "bg-blue-500 text-white"
+                    : "bg-white text-gray-800"
+                }`}
+              >
+                Show All
+              </button>
             </div>
 
             {/* Table or No Data Message */}

@@ -5,14 +5,14 @@ import mongoose from 'mongoose';
 const createInvoice = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue } = req.body;
+        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue, Discount } = req.body;
 
         if (!CustomerName || !CustomerEmail || !AmountPaid || !PaymentMethod || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
-        if (AmountPaid < 0) {
-            return res.status(400).send({ "message": "Amount cannot be less than 0" });
+        if (AmountPaid < 0 || Discount <= 0) {
+            return res.status(400).send({ "message": "Amount and Discount cannot be less than 0" });
         }
 
         // Calculate total amount of all items
@@ -52,6 +52,7 @@ const createInvoice = async (req, res) => {
             CustomerEmail,
             Items,
             AmountPaid,
+            Discount,
             DueDate: AmountPaid < totalAmount ? DueDate : undefined, // Only include DueDate if needed
             IsDue: AmountPaid < totalAmount,
             Date,
@@ -103,7 +104,7 @@ const updateInvoice = async (req, res) => {
         const userId = req.user.id;
         // console.log(userId);
         
-        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue } = req.body;
+        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue, Discount } = req.body;
 
         // console.log(CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue);
         
@@ -112,8 +113,8 @@ const updateInvoice = async (req, res) => {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
-        if (AmountPaid < 0) {
-            return res.status(400).send({ "message": "Amount cannot be less than 0" });
+        if (AmountPaid < 0 || Discount < 0) {
+            return res.status(400).send({ "message": "Amount and Discount cannot be less than 0" });
         }
 
         const invoice = await Invoice.findById(id);
@@ -161,7 +162,7 @@ const updateInvoice = async (req, res) => {
 
         const updatedInvoice = await Invoice.findByIdAndUpdate(
             id,
-            { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue },
+            { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue, Discount },
             { new: true }
         );
 

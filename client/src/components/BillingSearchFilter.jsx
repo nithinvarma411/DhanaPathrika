@@ -19,7 +19,7 @@ const BillingSearchFilter = ({ setSearchQuery, setSelectedDate }) => {
       <div className="relative w-full">
         <input
           type="text"
-          placeholder="Search by invoice number, name, amount..."
+          placeholder="Search by invoice number, name"
           className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
           onChange={(e) => setSearchQuery(e.target.value.toLowerCase())}
         />

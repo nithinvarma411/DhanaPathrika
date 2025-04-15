@@ -14,6 +14,7 @@ const InvoiceGenerator = () => {
     customerName: "",
     customerEmail: "",
     amountPaid: "",
+    discount: "",
     dueDate: "",
     paymentMethod: "",
     items: [{ itemName: "", amountPerItem: "", quantity: "" }],
@@ -53,6 +54,7 @@ const InvoiceGenerator = () => {
       CustomerEmail: formData.customerEmail,
       AmountPaid: formData.amountPaid,
       DueDate: formData.dueDate,
+      Discount: Number(formData.discount),
       PaymentMethod: formData.paymentMethod,
       Items: formData.items.map((item) => ({
         Name: item.itemName,
@@ -66,6 +68,8 @@ const InvoiceGenerator = () => {
     };
 
     try {
+      console.log(formData.discount);
+      
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/createInvoice`,
         invoiceData,
@@ -77,6 +81,7 @@ const InvoiceGenerator = () => {
         customerName: "",
         customerEmail: "",
         amountPaid: "",
+        discount: 0,
         dueDate: "",
         paymentMethod: "",
         items: [{ itemName: "", amountPerItem: "", quantity: "" }],
@@ -124,8 +129,8 @@ const InvoiceGenerator = () => {
                   </div>
 
                   <div className="relative">
-                    <label className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
-                      Amount Per Item
+                    <label className="absolute left-2 -top-3 bg-white px-1 text-sm text-gray-500">
+                      Amount Per Item (after discount)
                     </label>
                     <input
                       type="number"
@@ -160,6 +165,7 @@ const InvoiceGenerator = () => {
                 { label: "Customer Name", name: "customerName", type: "text" },
                 { label: "Customer Email", name: "customerEmail", type: "email" },
                 { label: "Amount Paid", name: "amountPaid", type: "number" },
+                { label: "Total Discount", name: "discount", type: "number" },
                 { label: "Due Date", name: "dueDate", type: "date" },
                 { label: "Payment Method", name: "paymentMethod", type: "text" },
               ].map(({ label, name, type }) => (

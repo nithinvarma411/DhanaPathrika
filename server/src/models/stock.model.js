@@ -6,6 +6,7 @@ const stockSchema = new Schema({
     SellingPrice: Number,
     AvailableQuantity: Number,
     MinQuantity: Number,
+    ItemCode: String,
     user: { type: Schema.Types.ObjectId, ref: "User" } 
 },{timestamps:true})
 

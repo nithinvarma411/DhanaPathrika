@@ -9,6 +9,10 @@ const invoiceSchema = new Schema({
         Quantity: Number
     }],
     AmountPaid: Number,
+    Discount: {
+        type: Number,
+        default: 0
+    },
     DueDate: Date,
     IsDue: {
         type: Boolean,

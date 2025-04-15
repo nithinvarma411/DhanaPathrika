@@ -325,7 +325,7 @@ const Login = () => {
               whileTap={!loading ? { scale: 0.95 } : {}}
               className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading ? "Processing..." : "🧑‍💼Face Authenticate"}
+              {loading ? "Processing..." : "🧑‍💼 Face Authenticate"}
             </motion.button>
 
             {isFaceAuthActive && (
@@ -337,14 +337,14 @@ const Login = () => {
                   <img
                     src={capturedImage}
                     alt="Captured"
-                    className="w-full h-48 border rounded-lg mb-4"
+                    className="w-48 h-48 border rounded-lg mb-4"
                   />
                 ) : (
                   <video
                     id="videoElement"
                     autoPlay
                     muted
-                    className="w-full h-48 border rounded-lg mb-4"
+                    className="w-48 h-48 border rounded-lg mb-4"
                   ></video>
                 )}
                 <canvas id="canvasElement" className="hidden"></canvas>

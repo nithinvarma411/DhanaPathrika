@@ -3,7 +3,7 @@ import mongoose from 'mongoose';
 
 const addStock = async (req, res) => {
     try {
-        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity } = req.body;
+        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode } = req.body;
         const userId = req.user.id;
         // console.log("userId", userId)
 
@@ -27,6 +27,7 @@ const addStock = async (req, res) => {
             SellingPrice,
             AvailableQuantity,
             MinQuantity,
+            ItemCode,
             user: userId
         });
 
@@ -66,7 +67,7 @@ const updateStock = async (req, res) => {
             return res.status(400).send({ "message": "Invalid stock ID" });
         }
 
-        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity } = req.body;
+        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode } = req.body;
         const userId = req.user.id;
 
         if (!ItemName || isNaN(CostPrice) || isNaN(SellingPrice) || isNaN(AvailableQuantity) || isNaN(MinQuantity)) {
@@ -85,7 +86,7 @@ const updateStock = async (req, res) => {
 
         const updatedStock = await Stock.findByIdAndUpdate(
             id,
-            { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity },
+            { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode },
             { new: true }
         );
 

@@ -12,6 +12,7 @@ const AddStock = () => {
   const [minimumQuantity, setMinimumQuantity] = useState("");
   const [costPrice, setCostPrice] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
+  const [itemCode, setItemCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ const AddStock = () => {
           MinQuantity: minimumQuantity,
           CostPrice: costPrice,
           SellingPrice: sellingPrice,
+          ItemCode: itemCode
         },
         {
           withCredentials: true,
@@ -102,6 +104,22 @@ const AddStock = () => {
                 value={minimumQuantity}
                 onChange={(e) => setMinimumQuantity(e.target.value)}
                 className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
+              />
+            </div>
+
+            <div className="relative">
+              <label
+                htmlFor="itemCode"
+                className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
+              >
+                Item Code
+              </label>
+              <input
+                type="text"
+                id="itemCode"
+                value={itemCode}
+                onChange={(e) => setItemCode(e.target.value)}
+                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-400"
               />
             </div>
 

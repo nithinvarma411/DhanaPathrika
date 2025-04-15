@@ -37,7 +37,7 @@ const register = async (req, res) => {
     try {
         const { MobileNumber, Email, Password, FaceDescriptor } = req.body;
 
-        console.log("Received data:", { MobileNumber, Email, Password, FaceDescriptor });
+        // console.log("Received data:", { MobileNumber, Email, Password, FaceDescriptor });
 
         // Validate required fields
         if (!MobileNumber || !Email || !Password) {

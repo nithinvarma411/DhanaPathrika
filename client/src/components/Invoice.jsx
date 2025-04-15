@@ -77,6 +77,12 @@ const Invoice = ({ invoice, profile }) => {
                     <td className="py-2 px-2 sm:px-4 text-right">{totalQuantity}</td>
                     <td className="py-2 px-2 sm:px-4 text-right">₹ {totalAmount}</td>
                   </tr>
+
+                  <tr className="border-b border-gray-300">
+                    <td className="py-2 px-2 sm:px-4 font-bold">Discount</td>
+                    <td className="py-2 px-2 sm:px-4 text-right"></td>
+                    <td className="py-2 px-2 sm:px-4 text-right">₹ {invoice.Discount}</td>
+                  </tr>
                 </tbody>
               </table>
             </div>

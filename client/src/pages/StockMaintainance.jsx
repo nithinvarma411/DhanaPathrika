@@ -67,6 +67,7 @@ function StockMaintainance() {
         SellingPrice: Number(editedData.SellingPrice),
         AvailableQuantity: Number(editedData.AvailableQuantity),
         MinQuantity: Number(editedData.MinQuantity),
+        ItemCode: editedData.ItemCode
       };
 
       if (
@@ -206,6 +207,9 @@ function StockMaintainance() {
                       Item Name
                     </th>
                     <th className="border border-gray-300 px-4 py-2 text-left">
+                      Item Code
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
                       Cost Price
                     </th>
                     <th className="border border-gray-300 px-4 py-2 text-left">
@@ -238,6 +242,19 @@ function StockMaintainance() {
                               : item.ItemName
                           }
                           onChange={(e) => handleChange(e, "ItemName")}
+                          disabled={editingRow !== index}
+                        />
+                      </td>
+                      <td className="border border-gray-300 overflow-x-auto px-4 py-2">
+                        <input
+                          type="text"
+                          className="w-full focus:outline-none"
+                          value={
+                            editingRow === index
+                              ? editedData.ItemCode
+                              : item.ItemCode
+                          }
+                          onChange={(e) => handleChange(e, "ItemCode")}
                           disabled={editingRow !== index}
                         />
                       </td>

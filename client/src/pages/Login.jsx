@@ -10,6 +10,7 @@ import logoImage from "../assets/logo.jpg";
 import mainImage from "../assets/main.jpg";
 import googleIcon from "../assets/google.jpg";
 import appleIcon from "../assets/apple.png";
+import * as faceapi from "face-api.js";
 
 const Login = () => {
   const welcomeText = "Welcome to Dhana Pathrika".split(" ");
@@ -17,6 +18,10 @@ const Login = () => {
   const [NumberOrEmail, setNumberOrEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [faceDescriptor, setFaceDescriptor] = useState(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [isFaceAuthActive, setIsFaceAuthActive] = useState(false);
 
   const validateInput = () => {
     const mobileRegex = /^[6-9]\d{9}$/;
@@ -60,10 +65,133 @@ const Login = () => {
     }
   };
 
+  const startCamera = async () => {
+      try {
+        const video = document.getElementById("videoElement");
+        if (!video.srcObject) {
+          const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+          });
+          video.srcObject = stream;
+          await video.play();
+          // console.log("Camera started.");
+        }
+      } catch (error) {
+        console.error("Error starting camera:", error);
+        toast.error(
+          "Failed to access the camera. Please check your permissions."
+        );
+      }
+    };
+  
+    const handleCaptureClick = async () => {
+      const video = document.getElementById("videoElement");
+  
+      if (isCameraActive) {
+        // Cancel capture
+        setIsCameraActive(false);
+        setCapturedImage(null);
+        const stream = video.srcObject;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach((track) => track.stop());
+          video.srcObject = null;
+        }
+        // console.log("Camera stopped.");
+      } else if (!capturedImage) {
+        // Start camera if no image is captured
+        setIsCameraActive(true);
+        await startCamera();
+      }
+    };
+  
+    const captureFaceDescriptor = async () => {
+      try {
+        const video = document.getElementById("videoElement");
+        const canvas = document.getElementById("canvasElement");
+  
+        if (!video || !canvas) {
+          toast.error("Video or canvas element not found.");
+          return;
+        }
+  
+        // Ensure face-api models are loaded
+        try {
+          await Promise.all([
+            faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+            faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+            faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+          ]);
+          // console.log("Face-api models loaded successfully.");
+        } catch (modelError) {
+          console.error("Error loading face-api models:", modelError);
+          toast.error("Failed to load face detection models. Please try again.");
+          return;
+        }
+  
+        // Draw the current frame from the video onto the canvas
+        const context = canvas.getContext("2d");
+        context.drawImage(video, 0, 0, canvas.width, canvas.height);
+  
+        // Save the captured image
+        const imageData = canvas.toDataURL("image/png");
+        setCapturedImage(imageData);
+  
+        // Stop the camera after capturing
+        const stream = video.srcObject;
+        if (stream) {
+          const tracks = stream.getTracks();
+          tracks.forEach((track) => track.stop());
+          video.srcObject = null;
+        }
+        setIsCameraActive(false);
+  
+        // Detect face and landmarks
+        const detections = await faceapi
+          .detectSingleFace(canvas)
+          .withFaceLandmarks()
+          .withFaceDescriptor();
+  
+        // console.log("Detections:", detections);
+  
+        if (detections && detections.descriptor) {
+          setFaceDescriptor(detections.descriptor);
+          // console.log("Face descriptor captured:", detections.descriptor);
+          toast.success("Face captured successfully!");
+        } else {
+          // console.error("No face detected or descriptor is null.");
+          toast.error("No face detected. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error capturing face descriptor:", error);
+        toast.error("Failed to capture face. Please try again.");
+      }
+    };
+
+    const faceLogin = async () => {
+      try {
+        console.log(faceDescriptor);
+        
+        const sendFace = await axios.post(`${import.meta.env.VITE_BACKEND_URL}api/v1/user/facelogin`, {descriptor: faceDescriptor}, {withCredentials: true});
+        toast.success(sendFace.data.message);
+        if (sendFace.status == 200) {
+          window.location.href = "/home";
+        }
+        // console.log(sendFace);
+      } catch (error) {
+        toast.error(error.response?.data?.message);
+        console.error(error);
+      }
+    }
+
   const handleGoogleLogin = async () => {
     if (loading) return;
     setLoading(true);
     window.location.href = `${import.meta.env.VITE_BACKEND_URL}auth/google`;
+  };
+
+  const handleFaceAuthClick = () => {
+    setIsFaceAuthActive(true);
   };
 
   return (
@@ -191,17 +319,84 @@ const Login = () => {
             </motion.button>
 
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md"
+              onClick={handleFaceAuthClick}
+              disabled={loading}
+              whileHover={!loading ? { scale: 1.05 } : {}}
+              whileTap={!loading ? { scale: 0.95 } : {}}
+              className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <img
-                src={appleIcon}
-                alt="Continue with Apple"
-                className="w-5 h-5 mr-2"
-              />
-              Continue with Apple
+              {loading ? "Processing..." : "🧑‍💼Face Authenticate"}
             </motion.button>
+
+            {isFaceAuthActive && (
+              <div className="relative">
+                <label className="block text-sm text-gray-500 mb-2">
+                  Capture Face
+                </label>
+                {capturedImage ? (
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
+                    className="w-full h-48 border rounded-lg mb-4"
+                  />
+                ) : (
+                  <video
+                    id="videoElement"
+                    autoPlay
+                    muted
+                    className="w-full h-48 border rounded-lg mb-4"
+                  ></video>
+                )}
+                <canvas id="canvasElement" className="hidden"></canvas>
+                {!capturedImage && (
+                  <motion.button
+                    type="button"
+                    onClick={
+                      isCameraActive
+                        ? captureFaceDescriptor
+                        : handleCaptureClick
+                    }
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`w-full py-3 rounded-lg ${
+                      isCameraActive
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-blue-500 hover:bg-blue-600"
+                    } text-white`}
+                  >
+                    {isCameraActive ? "Capture" : "Start Camera"}
+                  </motion.button>
+                )}
+                {capturedImage && (
+                  <motion.button
+                    type="button"
+                    onClick={handleCaptureClick}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full py-3 mt-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white"
+                  >
+                    Cancel
+                  </motion.button>
+                )}
+              </div>
+            )}
+
+            {isFaceAuthActive && (
+              <motion.button
+                type="button"
+                onClick={faceLogin}
+                disabled={loading}
+                whileHover={!loading ? { scale: 1.05 } : {}}
+                whileTap={!loading ? { scale: 0.95 } : {}}
+                className={`w-full py-3 rounded-lg ${
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-600"
+                } text-white`}
+              >
+                {loading ? "Verifying..." : "Verify & Register"}
+              </motion.button>
+            )}
           </div>
 
           <p className="text-center text-sm mt-4 text-gray-600">

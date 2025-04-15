@@ -39,18 +39,24 @@ const sendotp = async (req, res) => {
 };
 
 const verifyOTP = async (req, res) => {
-    const {Email, otp} = req.body;
+    const { Email, otp } = req.body;
+    // console.log("Received Email:", Email);
+    // console.log("Received OTP:", otp);
 
     if (!Email || !otp) {
+        // console.log("Missing Email or OTP");
         return res.status(400).send({ message: "All Fields are Required" });
     }
 
     const storedOtp = storeOTP.get(Email);
+    // console.log("Stored OTP:", storedOtp);
 
     if (String(otp) === String(storedOtp)) {
+        // console.log("OTP verified successfully");
         storeOTP.delete(Email);
         return res.status(200).send({ message: "OTP verified. You can now reset your password." });
     } else {
+        console.log("Invalid or expired OTP");
         return res.status(400).send({ message: "Invalid or expired OTP" });
     }
 };

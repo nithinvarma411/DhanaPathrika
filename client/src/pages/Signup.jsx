@@ -10,6 +10,7 @@ import logoImage from "../assets/logo.jpg";
 import mainImage from "../assets/main.jpg";
 import googleIcon from "../assets/google.jpg";
 import appleIcon from "../assets/apple.png";
+import * as faceapi from "face-api.js";
 
 const Signup = () => {
   const welcomeText = "Welcome to Dhana Pathrika".split(" ");
@@ -20,6 +21,9 @@ const Signup = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [otpSent, setOtpSent] = useState(false);
   const [enteredOtp, setEnteredOtp] = useState("");
+  const [faceDescriptor, setFaceDescriptor] = useState(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
 
   const validateInput = () => {
     const mobileRegex = /^[6-9]\d{9}$/;
@@ -61,6 +65,109 @@ const Signup = () => {
     }
   };
 
+  const startCamera = async () => {
+    try {
+      const video = document.getElementById("videoElement");
+      if (!video.srcObject) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        video.srcObject = stream;
+        await video.play();
+        // console.log("Camera started.");
+      }
+    } catch (error) {
+      console.error("Error starting camera:", error);
+      toast.error(
+        "Failed to access the camera. Please check your permissions."
+      );
+    }
+  };
+
+  const handleCaptureClick = async () => {
+    const video = document.getElementById("videoElement");
+
+    if (isCameraActive) {
+      // Cancel capture
+      setIsCameraActive(false);
+      setCapturedImage(null);
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+        video.srcObject = null;
+      }
+      // console.log("Camera stopped.");
+    } else if (!capturedImage) {
+      // Start camera if no image is captured
+      setIsCameraActive(true);
+      await startCamera();
+    }
+  };
+
+  const captureFaceDescriptor = async () => {
+    try {
+      const video = document.getElementById("videoElement");
+      const canvas = document.getElementById("canvasElement");
+
+      if (!video || !canvas) {
+        toast.error("Video or canvas element not found.");
+        return;
+      }
+
+      // Ensure face-api models are loaded
+      try {
+        await Promise.all([
+          faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+          faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+          faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+        ]);
+        // console.log("Face-api models loaded successfully.");
+      } catch (modelError) {
+        console.error("Error loading face-api models:", modelError);
+        toast.error("Failed to load face detection models. Please try again.");
+        return;
+      }
+
+      // Draw the current frame from the video onto the canvas
+      const context = canvas.getContext("2d");
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Save the captured image
+      const imageData = canvas.toDataURL("image/png");
+      setCapturedImage(imageData);
+
+      // Stop the camera after capturing
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+        video.srcObject = null;
+      }
+      setIsCameraActive(false);
+
+      // Detect face and landmarks
+      const detections = await faceapi
+        .detectSingleFace(canvas)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      // console.log("Detections:", detections);
+
+      if (detections && detections.descriptor) {
+        setFaceDescriptor(detections.descriptor);
+        // console.log("Face descriptor captured:", detections.descriptor);
+        toast.success("Face captured successfully!");
+      } else {
+        // console.error("No face detected or descriptor is null.");
+        toast.error("No face detected. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error capturing face descriptor:", error);
+      toast.error("Failed to capture face. Please try again.");
+    }
+  };
+
   const verifyOtpAndRegister = async () => {
     if (!enteredOtp) {
       toast.error("Please enter OTP");
@@ -68,24 +175,36 @@ const Signup = () => {
     }
     setLoading(true);
     try {
+      console.log("Sending OTP verification request...");
       const otpRes = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/verify/verifyotp`,
         { Email: email, otp: enteredOtp },
         { withCredentials: true }
       );
+      console.log("OTP verification response:", otpRes);
 
       if (otpRes.status === 200) {
         toast.success("Email verified successfully!");
 
+        const registrationData = {
+          MobileNumber: mobileNumber,
+          Email: email,
+          Password: password,
+          FaceDescriptor: faceDescriptor
+            ? faceDescriptor
+            : null,
+        };
+        console.log(
+          "Sending registration request with data:",
+          registrationData
+        );
+
         const registerRes = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}api/v1/user/register`,
-          {
-            MobileNumber: mobileNumber,
-            Email: email,
-            Password: password,
-          },
+          registrationData,
           { withCredentials: true }
         );
+        // console.log("Registration response:", registerRes);
 
         if (registerRes.status === 200) {
           toast.success("Registered successfully!");
@@ -93,8 +212,10 @@ const Signup = () => {
         }
       }
     } catch (err) {
-      console.error(err);
-      toast.error("Invalid OTP or Registration failed.");
+      console.error("Error during OTP verification or registration:", err);
+      toast.error(
+        err.response?.data?.message || "Invalid OTP or Registration failed."
+      );
     } finally {
       setLoading(false);
     }
@@ -112,7 +233,11 @@ const Signup = () => {
       style={{ backgroundImage: `url(${bgImage})` }}
     >
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 flex items-center z-10">
-        <img src={logoImage} alt="Logo" className="w-8 h-8 md:w-10 md:h-10 mr-2" />
+        <img
+          src={logoImage}
+          alt="Logo"
+          className="w-8 h-8 md:w-10 md:h-10 mr-2"
+        />
         <div className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-300 to-pink-300 drop-shadow-lg text-lg md:text-3xl font-bold tracking-wide flex items-center">
           {welcomeText.map((word, index) => (
             <motion.span
@@ -135,7 +260,11 @@ const Signup = () => {
           transition={{ duration: 0.5 }}
           className="hidden md:flex md:w-1/2 items-center justify-center"
         >
-          <img src={mainImage} alt="Illustration" className="w-150 h-90 rounded-4xl" />
+          <img
+            src={mainImage}
+            alt="Illustration"
+            className="w-150 h-90 rounded-4xl"
+          />
         </motion.div>
 
         <div className="w-full md:w-2/3 bg-white shadow-lg rounded-lg p-6 md:p-8">
@@ -146,7 +275,10 @@ const Signup = () => {
           {!otpSent ? (
             <form className="space-y-6">
               <div className="relative">
-                <label htmlFor="mobile" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                <label
+                  htmlFor="mobile"
+                  className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
+                >
                   Mobile No.
                 </label>
                 <input
@@ -159,7 +291,10 @@ const Signup = () => {
               </div>
 
               <div className="relative">
-                <label htmlFor="email" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                <label
+                  htmlFor="email"
+                  className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
+                >
                   Email
                 </label>
                 <input
@@ -172,7 +307,10 @@ const Signup = () => {
               </div>
 
               <div className="relative">
-                <label htmlFor="password" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                <label
+                  htmlFor="password"
+                  className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
+                >
                   Password
                 </label>
                 <input
@@ -198,7 +336,9 @@ const Signup = () => {
                 whileHover={!loading ? { scale: 1.05 } : {}}
                 whileTap={!loading ? { scale: 0.95 } : {}}
                 className={`w-full py-3 rounded-lg ${
-                  loading ? "bg-gray-400 cursor-not-allowed" : "bg-red-500 hover:bg-red-600"
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-red-500 hover:bg-red-600"
                 } text-white`}
               >
                 {loading ? "Sending OTP..." : "Send OTP"}
@@ -207,7 +347,10 @@ const Signup = () => {
           ) : (
             <div className="space-y-6">
               <div className="relative">
-                <label htmlFor="otp" className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                <label
+                  htmlFor="otp"
+                  className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
+                >
                   Enter OTP
                 </label>
                 <input
@@ -220,6 +363,57 @@ const Signup = () => {
                 />
               </div>
 
+              <div className="relative">
+                <label className="block text-sm text-gray-500 mb-2">
+                  Capture Face
+                </label>
+                {capturedImage ? (
+                  <img
+                    src={capturedImage}
+                    alt="Captured"
+                    className="w-full h-48 border rounded-lg mb-4"
+                  />
+                ) : (
+                  <video
+                    id="videoElement"
+                    autoPlay
+                    muted
+                    className="w-full h-48 border rounded-lg mb-4"
+                  ></video>
+                )}
+                <canvas id="canvasElement" className="hidden"></canvas>
+                {!capturedImage && (
+                  <motion.button
+                    type="button"
+                    onClick={
+                      isCameraActive
+                        ? captureFaceDescriptor
+                        : handleCaptureClick
+                    }
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className={`w-full py-3 rounded-lg ${
+                      isCameraActive
+                        ? "bg-red-500 hover:bg-red-600"
+                        : "bg-blue-500 hover:bg-blue-600"
+                    } text-white`}
+                  >
+                    {isCameraActive ? "Capture" : "Start Camera"}
+                  </motion.button>
+                )}
+                {capturedImage && (
+                  <motion.button
+                    type="button"
+                    onClick={handleCaptureClick}
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    className="w-full py-3 mt-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white"
+                  >
+                    Cancel
+                  </motion.button>
+                )}
+              </div>
+
               <motion.button
                 type="button"
                 onClick={verifyOtpAndRegister}
@@ -227,7 +421,9 @@ const Signup = () => {
                 whileHover={!loading ? { scale: 1.05 } : {}}
                 whileTap={!loading ? { scale: 0.95 } : {}}
                 className={`w-full py-3 rounded-lg ${
-                  loading ? "bg-gray-400 cursor-not-allowed" : "bg-green-500 hover:bg-green-600"
+                  loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-green-500 hover:bg-green-600"
                 } text-white`}
               >
                 {loading ? "Verifying..." : "Verify & Register"}
@@ -246,7 +442,11 @@ const Signup = () => {
                   whileTap={!loading ? { scale: 0.95 } : {}}
                   className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  <img src={googleIcon} alt="Continue with Google" className="w-5 h-5 mr-2" />
+                  <img
+                    src={googleIcon}
+                    alt="Continue with Google"
+                    className="w-5 h-5 mr-2"
+                  />
                   {loading ? "Processing..." : "Continue with Google"}
                 </motion.button>
 
@@ -255,7 +455,11 @@ const Signup = () => {
                   whileTap={{ scale: 0.95 }}
                   className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md"
                 >
-                  <img src={appleIcon} alt="Continue with Apple" className="w-5 h-5 mr-2" />
+                  <img
+                    src={appleIcon}
+                    alt="Continue with Apple"
+                    className="w-5 h-5 mr-2"
+                  />
                   Continue with Apple
                 </motion.button>
               </div>

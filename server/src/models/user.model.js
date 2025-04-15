@@ -9,7 +9,11 @@ const userSchema = new Schema({
     Logo: String,
     BussinessAdress: String,
     Pincode: Number,
-    GoogleId: String
+    GoogleId: String,
+    FaceDescriptor: {
+        type: [Number],
+        default: null
+    }
 },{timestamps: true})
 
 export const User = model("User", userSchema);

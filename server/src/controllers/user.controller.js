@@ -35,44 +35,95 @@ passport.use(new GoogleStrategy({
 
 const register = async (req, res) => {
     try {
-        const { MobileNumber, Email, Password } = req.body;
+        const { MobileNumber, Email, Password, FaceDescriptor } = req.body;
 
+        console.log("Received data:", { MobileNumber, Email, Password, FaceDescriptor });
+
+        // Validate required fields
         if (!MobileNumber || !Email || !Password) {
+            // console.log("Validation failed: Missing required fields.");
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
+        // Check if user already exists
         const existedUser = await User.findOne({ $or: [{ MobileNumber }, { Email }] });
-
         if (existedUser) {
-            return res.status(409).send({ "message": "User with email or MobileNumber already exists" });
+            // console.log("Validation failed: User already exists.");
+            return res.status(409).send({ "message": "User already exists" });
         }
 
+        // Hash the password
         const hashedPassword = await bcrypt.hash(Password, 10);
 
+        // Ensure FaceDescriptor is an array of numbers
+        // Ensure FaceDescriptor is an array of numbers
+        var faceDescriptorArray = null;
+        if (FaceDescriptor) {
+
+            faceDescriptorArray = FaceDescriptor;
+            if (typeof faceDescriptorArray === 'string') {
+                try {
+                    faceDescriptorArray = JSON.parse(faceDescriptorArray); // Parse string to array if needed
+                } catch (error) {
+                    // console.log('Invalid FaceDescriptor string format:', error);
+                    return res.status(400).send({ "message": "Invalid FaceDescriptor format" });
+                }
+            }
+
+            // Convert object to array if needed (Object.values)
+            if (typeof faceDescriptorArray === 'object' && !Array.isArray(faceDescriptorArray)) {
+                faceDescriptorArray = Object.values(faceDescriptorArray);
+            }
+
+            // Ensure it is an array of numbers
+            if (!Array.isArray(faceDescriptorArray)) {
+                return res.status(400).send({ "message": "FaceDescriptor should be an array" });
+            }
+
+            if (!faceDescriptorArray.every(item => typeof item === 'number' && isFinite(item))) {
+                return res.status(400).send({ "message": "FaceDescriptor should contain only finite numbers" });
+            }
+
+            // Check for duplicate face
+            if (faceDescriptorArray) {
+                const users = await User.find({ FaceDescriptor: { $ne: null } });
+
+                for (const user of users) {
+                    if (!Array.isArray(user.FaceDescriptor) || user.FaceDescriptor.length !== 128) continue;
+
+                    const distance = euclideanDistance(faceDescriptorArray, user.FaceDescriptor);
+
+                    if (distance < 0.5) {
+                        return res.status(409).send({ message: "Face already registered with another account" });
+                    }
+                }
+            }
+
+        }
+
+        // Save user with correct FaceDescriptor format
         const newUser = new User({
             MobileNumber,
             Email,
-            Password: hashedPassword
+            Password: hashedPassword,
+            FaceDescriptor: faceDescriptorArray ? faceDescriptorArray : null
         });
-
-        // console.log("newUser", newUser);
 
         await newUser.save();
 
-        let token;
-        try {
-            token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, { expiresIn: '10d' });
-        } catch (err) {
-            return res.status(500).send({ message: "Error generating token" });
-        }
--
+
+        // Generate a JWT token for the user
+        const token = jwt.sign({ id: newUser.id }, process.env.JWT_SECRET, { expiresIn: '10d' });
+
+        // Set the token as a cookie in the response
         res.cookie('token', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
-            maxAge: 7 * 24 * 60 * 60 * 1000
+            maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
         });
 
+        // console.log("User registered successfully.");
         return res.status(200).send({ "message": "User created successfully" });
 
     } catch (error) {
@@ -182,6 +233,76 @@ const logout = (req, res) => {
     }
 };
 
+const faceLogin = async (req, res) => {
+    try {
+        let { descriptor } = req.body; // Might be array, stringified array, or object
 
-export { register, login, googleAuth, googleAuthCallback, googleAuthSuccess, logout };
+        // console.log("Received descriptor:", descriptor);
+
+        // Parse descriptor if needed
+        if (typeof descriptor === 'string') {
+            try {
+                descriptor = JSON.parse(descriptor);
+            } catch (error) {
+                return res.status(400).send({ message: "Invalid FaceDescriptor format" });
+            }
+        }
+
+        if (typeof descriptor === 'object' && !Array.isArray(descriptor)) {
+            descriptor = Object.values(descriptor);
+        }
+
+        if (
+            !descriptor ||
+            !Array.isArray(descriptor) ||
+            descriptor.length !== 128 ||
+            !descriptor.every(item => typeof item === 'number' && isFinite(item))
+        ) {
+            return res.status(400).send({ message: "Face descriptor missing, invalid, or incorrect format" });
+        }
+
+        // Find all users with FaceDescriptor
+        const users = await User.find({ FaceDescriptor: { $ne: null } });
+
+        for (const user of users) {
+            if (!Array.isArray(user.FaceDescriptor) || user.FaceDescriptor.length !== 128) continue;
+
+            const distance = euclideanDistance(descriptor, user.FaceDescriptor);
+
+            if (distance < 0.5) {
+                const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '10d' });
+
+                res.cookie('token', token, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+                    maxAge: 7 * 24 * 60 * 60 * 1000
+                });
+
+                return res.status(200).send({ message: "Face login successful", user });
+            }
+        }
+
+        return res.status(401).send({ message: "Face not recognized" });
+
+    } catch (error) {
+        console.error("Error in face login:", error);
+        return res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+
+// Helper function to calculate Euclidean distance
+function euclideanDistance(arr1, arr2) {
+    let sum = 0;
+    for (let i = 0; i < arr1.length; i++) {
+        sum += Math.pow(arr1[i] - arr2[i], 2);
+    }
+    return Math.sqrt(sum);
+}
+
+
+
+
+export { register, login, googleAuth, googleAuthCallback, googleAuthSuccess, logout, faceLogin };
 

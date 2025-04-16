@@ -215,4 +215,25 @@ const deleteGroup = async (req, res) => {
     }
 };
 
-export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup };
+const removeFromGroup = async (req, res) => {
+    try {
+        const { itemIds } = req.body;
+        const userId = req.user.id;
+
+        if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+            return res.status(400).send({ message: "At least one item must be selected" });
+        }
+
+        await Stock.updateMany(
+            { _id: { $in: itemIds }, user: userId },
+            { $set: { Group: null } }
+        );
+
+        return res.status(200).send({ message: "Items removed from group successfully" });
+    } catch (error) {
+        console.error("Error removing items from group:", error);
+        return res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup, removeFromGroup };

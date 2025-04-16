@@ -160,9 +160,13 @@ function StockMaintainance() {
   };
 
   const handleSearch = (e) => {
-    setSearchQuery(e.target.value);
-    const filtered = items.filter((item) =>
-      item.ItemName.includes(e.target.value)
+    const query = e.target.value.toLowerCase();
+    setSearchQuery(query);
+  
+    const sourceItems = isGroupView ? items.filter((item) => item.Group === filteredItems[0]?.Group) : items;
+    const filtered = sourceItems.filter((item) =>
+      item.ItemName.toLowerCase().includes(query) || 
+      (item.ItemCode && item.ItemCode.toLowerCase().includes(query)) // Check if ItemCode exists
     );
     setFilteredItems(filtered);
   };
@@ -214,6 +218,10 @@ function StockMaintainance() {
   };
 
   const handleGroupButtonClick = () => {
+    if (isGroupView) {
+      setFilteredItems(items); // Reset to show all items
+      setIsGroupView(false); // Exit group view mode
+    }
     setIsGroupCreationView(true);
     setSelectedItems([]); // Reset selected items
   };
@@ -260,6 +268,25 @@ function StockMaintainance() {
     }
   };
 
+  const handleRemoveItemFromGroup = async (itemId) => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/removeFromGroup`,
+        { itemIds: [itemId] },
+        { withCredentials: true }
+      );
+  
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        window.location.reload(); // Reload the page after successful removal
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error removing item from group");
+    }
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -277,7 +304,7 @@ function StockMaintainance() {
             <div className="flex justify-center items-center mb-4">
               <input
                 type="text"
-                placeholder="Search Item..."
+                placeholder="Search by Name or Code ..."
                 className="px-4 py-2 border rounded-md"
                 value={searchQuery}
                 onChange={handleSearch}
@@ -343,7 +370,7 @@ function StockMaintainance() {
                   className={`px-4 py-2 rounded-md ${
                     isGroupView && filteredItems[0]?.Group === group
                       ? "bg-green-500 text-white hover:bg-green-600"
-                      : "bg-blue-500 text-white hover:bg-blue-600"
+                      : "bg-white text-black hover:bg-gray-200 border border-black"
                   }`}
                 >
                   {group}
@@ -493,6 +520,14 @@ function StockMaintainance() {
                           >
                             Delete
                           </button>
+                          {isGroupView && item.Group && (
+                            <button
+                              className="px-4 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
+                              onClick={() => handleRemoveItemFromGroup(item._id)}
+                            >
+                              Remove from Group
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>

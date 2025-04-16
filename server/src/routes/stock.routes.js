@@ -1,4 +1,4 @@
-import { addStock, getStock, updateStock, deleteStock, getStockByGroup, createGroup, deleteGroup } from "../controllers/stock.controller.js";
+import { addStock, getStock, updateStock, deleteStock, getStockByGroup, createGroup, deleteGroup, removeFromGroup } from "../controllers/stock.controller.js";
 import {Router} from 'express';
 
 const router = Router();
@@ -10,5 +10,6 @@ router.route("/createGroup").post(createGroup);
 router.route("/update/:id").put(updateStock);
 router.route("/delete/:id").delete(deleteStock);
 router.route("/deleteGroup").post(deleteGroup);
+router.route("/removeFromGroup").put(removeFromGroup);
 
 export default router;

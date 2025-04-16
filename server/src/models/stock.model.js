@@ -7,6 +7,7 @@ const stockSchema = new Schema({
     AvailableQuantity: Number,
     MinQuantity: Number,
     ItemCode: String,
+    Group: { type: String, default: null }, // New field for grouping
     user: { type: Schema.Types.ObjectId, ref: "User" } 
 },{timestamps:true})
 

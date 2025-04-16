@@ -8,6 +8,7 @@ import cookieParser from 'cookie-parser';
 import cors from 'cors';
 import passport from 'passport';
 import session from 'express-session';
+import MongoStore from 'connect-mongo';
 
 const app = express();
 
@@ -21,7 +22,11 @@ app.use(cookieParser());
 app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    store: MongoStore.create({
+        mongoUrl: process.env.MONGO_URI,
+        collectionName: 'sessions'
+    })
 }));
 app.use(passport.initialize());
 app.use(passport.session());
@@ -51,9 +56,9 @@ app.get("/auth/google/callback", googleAuthCallback, googleAuthSuccess);
 
 cron.schedule('*/10 * * * *', () => {
     axios.get(process.env.BACKEND_URL)
-      .then(() => console.log('✅ Pinged self to stay awake'))
-      .catch(err => console.error('❌ Ping failed:', err.message));
-  });
+        .then(() => console.log('✅ Pinged self to stay awake'))
+        .catch(err => console.error('❌ Ping failed:', err.message));
+});
 
 connectDB()
     .then(() => {

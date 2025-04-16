@@ -175,13 +175,13 @@ const Signup = () => {
     }
     setLoading(true);
     try {
-      console.log("Sending OTP verification request...");
+      // console.log("Sending OTP verification request...");
       const otpRes = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/verify/verifyotp`,
         { Email: email, otp: enteredOtp },
         { withCredentials: true }
       );
-      console.log("OTP verification response:", otpRes);
+      // console.log("OTP verification response:", otpRes);
 
       if (otpRes.status === 200) {
         toast.success("Email verified successfully!");
@@ -194,10 +194,10 @@ const Signup = () => {
             ? faceDescriptor
             : null,
         };
-        console.log(
-          "Sending registration request with data:",
-          registrationData
-        );
+        // console.log(
+        //   "Sending registration request with data:",
+        //   registrationData
+        // );
 
         const registerRes = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}api/v1/user/register`,

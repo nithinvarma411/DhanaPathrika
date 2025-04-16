@@ -3,9 +3,8 @@ import mongoose from 'mongoose';
 
 const addStock = async (req, res) => {
     try {
-        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode } = req.body;
+        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode, Group } = req.body;
         const userId = req.user.id;
-        // console.log("userId", userId)
 
         if (!ItemName || isNaN(CostPrice) || isNaN(SellingPrice) || isNaN(AvailableQuantity) || isNaN(MinQuantity)) {
             return res.status(400).send({ "message": "All Fields are required" });
@@ -17,17 +16,21 @@ const addStock = async (req, res) => {
             return res.status(409).send({ "message": "Item already exists in your stock" });
         }
 
-        if (CostPrice < 1 || SellingPrice < 1 || AvailableQuantity < 1 || MinQuantity < 1) {
-            return res.status(400).json({ message: "Values must be greater than 0" });
+        if (Group) {
+            const groupConflict = await Stock.findOne({ Group, user: userId, ItemName: { $ne: ItemName } });
+            if (groupConflict) {
+                return res.status(409).send({ "message": "Group already contains another item" });
+            }
         }
 
         const newStock = new Stock({
-            ItemName: ItemName,
+            ItemName,
             CostPrice,
             SellingPrice,
             AvailableQuantity,
             MinQuantity,
             ItemCode,
+            Group,
             user: userId
         });
 
@@ -39,7 +42,6 @@ const addStock = async (req, res) => {
         return res.status(500).send({ "message": "Internal Server Error" });
     }
 };
-
 
 const getStock = async (req, res) => {
     try {
@@ -57,6 +59,23 @@ const getStock = async (req, res) => {
     }
 };
 
+const getStockByGroup = async (req, res) => {
+    try {
+        const { group } = req.params;
+        const userId = req.user.id;
+
+        const stockItems = await Stock.find({ Group: group, user: userId });
+
+        if (!stockItems.length) {
+            return res.status(404).send({ "message": "No items found in this group" });
+        }
+
+        return res.status(200).send(stockItems);
+    } catch (error) {
+        console.error("Error fetching group items:", error);
+        return res.status(500).send({ "message": "Internal Server Error" });
+    }
+};
 
 const updateStock = async (req, res) => {
     try {
@@ -67,15 +86,18 @@ const updateStock = async (req, res) => {
             return res.status(400).send({ "message": "Invalid stock ID" });
         }
 
-        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode } = req.body;
+        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode, Group } = req.body;
         const userId = req.user.id;
 
         if (!ItemName || isNaN(CostPrice) || isNaN(SellingPrice) || isNaN(AvailableQuantity) || isNaN(MinQuantity)) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
-        if (CostPrice < 1 || SellingPrice < 1 || AvailableQuantity < 1 || MinQuantity < 1) {
-            return res.status(400).send({ "message": "Values must be greater than 0" });
+        if (Group) {
+            const groupConflict = await Stock.findOne({ Group, user: userId, _id: { $ne: id } });
+            if (groupConflict) {
+                return res.status(409).send({ "message": "Group already contains another item" });
+            }
         }
 
         const stockItem = await Stock.findOne({ _id: id, user: userId });
@@ -86,7 +108,7 @@ const updateStock = async (req, res) => {
 
         const updatedStock = await Stock.findByIdAndUpdate(
             id,
-            { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode },
+            { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode, Group },
             { new: true }
         );
 
@@ -97,7 +119,6 @@ const updateStock = async (req, res) => {
         return res.status(500).send({ "message": "Internal Server Error" });
     }
 };
-
 
 const deleteStock = async (req, res) => {
     try {
@@ -125,5 +146,73 @@ const deleteStock = async (req, res) => {
     }
 };
 
+const createGroup = async (req, res) => {
+    try {
+        const { groupName, itemIds } = req.body;
+        const userId = req.user.id;
 
-export {addStock, getStock,updateStock, deleteStock};
+        if (!groupName) {
+            return res.status(400).send({ "message": "Group name is required" });
+        }
+
+        if (!itemIds || !Array.isArray(itemIds) || itemIds.length === 0) {
+            return res.status(400).send({ "message": "At least one item must be selected for the group" });
+        }
+
+        const groupConflict = await Stock.findOne({ Group: groupName, user: userId });
+        if (groupConflict) {
+            return res.status(409).send({ "message": "Group name already exists" });
+        }
+
+        // Ensure no item is already part of another group
+        const conflictingItems = await Stock.find({
+            _id: { $in: itemIds },
+            Group: { $ne: null },
+            user: userId
+        });
+
+        if (conflictingItems.length > 0) {
+            return res.status(409).send({
+                "message": "Some items are already part of another group",
+                conflictingItems: conflictingItems.map((item) => item.ItemName)
+            });
+        }
+
+        // Update items to associate them with the new group
+        await Stock.updateMany(
+            { _id: { $in: itemIds }, user: userId },
+            { $set: { Group: groupName } }
+        );
+
+        return res.status(201).send({ "message": "Group created successfully", groupName });
+    } catch (error) {
+        console.error("Error creating group:", error);
+        return res.status(500).send({ "message": "Internal Server Error" });
+    }
+};
+
+const deleteGroup = async (req, res) => {
+    try {
+        const { groupName } = req.body;
+        const userId = req.user.id;
+
+        if (!groupName) {
+            return res.status(400).send({ message: "Group name is required" });
+        }
+
+        const groupExists = await Stock.findOne({ Group: groupName, user: userId });
+        if (!groupExists) {
+            return res.status(404).send({ message: "Group not found" });
+        }
+
+        // Remove the group from all associated items
+        await Stock.updateMany({ Group: groupName, user: userId }, { $set: { Group: null } });
+
+        return res.status(200).send({ message: `Group "${groupName}" deleted successfully` });
+    } catch (error) {
+        console.error("Error deleting group:", error);
+        return res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup };

@@ -170,7 +170,7 @@ const Login = () => {
 
     const faceLogin = async () => {
       try {
-        console.log(faceDescriptor);
+        // console.log(faceDescriptor);
         
         const sendFace = await axios.post(`${import.meta.env.VITE_BACKEND_URL}api/v1/user/facelogin`, {descriptor: faceDescriptor}, {withCredentials: true});
         toast.success(sendFace.data.message);

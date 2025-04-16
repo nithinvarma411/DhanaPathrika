@@ -165,7 +165,7 @@ const ProfileSection = () => {
 
   const faceRegister = async () => {
     try {
-      console.log(faceDescriptor);
+      // console.log(faceDescriptor);
 
       const sendFace = await axios.patch(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/profile/faceregister`,

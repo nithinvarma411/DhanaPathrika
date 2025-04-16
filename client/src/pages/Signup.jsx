@@ -371,14 +371,14 @@ const Signup = () => {
                   <img
                     src={capturedImage}
                     alt="Captured"
-                    className="w-full h-48 border rounded-lg mb-4"
+                    className="w-48 h-48 border rounded-lg mb-4"
                   />
                 ) : (
                   <video
                     id="videoElement"
                     autoPlay
                     muted
-                    className="w-full h-48 border rounded-lg mb-4"
+                    className="w-48 h-48 border rounded-lg mb-4"
                   ></video>
                 )}
                 <canvas id="canvasElement" className="hidden"></canvas>

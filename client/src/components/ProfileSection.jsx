@@ -2,12 +2,18 @@ import React, { useEffect, useState, useRef } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import * as faceapi from "face-api.js";
 
 const ProfileSection = () => {
   const [profile, setProfile] = useState(null);
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({});
+  const [loading, setLoading] = useState(false);
   const toastShown = useRef(false);
+  const [faceDescriptor, setFaceDescriptor] = useState(null);
+  const [isCameraActive, setIsCameraActive] = useState(false);
+  const [capturedImage, setCapturedImage] = useState(null);
+  const [isFaceAuthActive, setIsFaceAuthActive] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -25,7 +31,9 @@ const ProfileSection = () => {
         }
       } catch (error) {
         if (!toastShown.current) {
-          toast.error(error.response?.data?.message || "Error fetching profile");
+          toast.error(
+            error.response?.data?.message || "Error fetching profile"
+          );
           toastShown.current = true;
         }
       }
@@ -50,6 +58,133 @@ const ProfileSection = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || "Error updating profile");
     }
+  };
+
+  const startCamera = async () => {
+    try {
+      const video = document.getElementById("videoElement");
+      if (!video.srcObject) {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: true,
+        });
+        video.srcObject = stream;
+        await video.play();
+        // console.log("Camera started.");
+      }
+    } catch (error) {
+      console.error("Error starting camera:", error);
+      toast.error(
+        "Failed to access the camera. Please check your permissions."
+      );
+    }
+  };
+
+  const handleCaptureClick = async () => {
+    const video = document.getElementById("videoElement");
+
+    if (isCameraActive) {
+      // Cancel capture
+      setIsCameraActive(false);
+      setCapturedImage(null);
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+        video.srcObject = null;
+      }
+      // console.log("Camera stopped.");
+    } else if (!capturedImage) {
+      // Start camera if no image is captured
+      setIsCameraActive(true);
+      await startCamera();
+    }
+  };
+
+  const captureFaceDescriptor = async () => {
+    try {
+      const video = document.getElementById("videoElement");
+      const canvas = document.getElementById("canvasElement");
+
+      if (!video || !canvas) {
+        toast.error("Video or canvas element not found.");
+        return;
+      }
+
+      // Ensure face-api models are loaded
+      try {
+        await Promise.all([
+          faceapi.nets.ssdMobilenetv1.loadFromUri("/models"),
+          faceapi.nets.faceLandmark68Net.loadFromUri("/models"),
+          faceapi.nets.faceRecognitionNet.loadFromUri("/models"),
+        ]);
+        // console.log("Face-api models loaded successfully.");
+      } catch (modelError) {
+        console.error("Error loading face-api models:", modelError);
+        toast.error("Failed to load face detection models. Please try again.");
+        return;
+      }
+
+      // Draw the current frame from the video onto the canvas
+      const context = canvas.getContext("2d");
+      context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      // Save the captured image
+      const imageData = canvas.toDataURL("image/png");
+      setCapturedImage(imageData);
+
+      // Stop the camera after capturing
+      const stream = video.srcObject;
+      if (stream) {
+        const tracks = stream.getTracks();
+        tracks.forEach((track) => track.stop());
+        video.srcObject = null;
+      }
+      setIsCameraActive(false);
+
+      // Detect face and landmarks
+      const detections = await faceapi
+        .detectSingleFace(canvas)
+        .withFaceLandmarks()
+        .withFaceDescriptor();
+
+      // console.log("Detections:", detections);
+
+      if (detections && detections.descriptor) {
+        setFaceDescriptor(detections.descriptor);
+        // console.log("Face descriptor captured:", detections.descriptor);
+        toast.success("Face captured successfully!");
+      } else {
+        // console.error("No face detected or descriptor is null.");
+        toast.error("No face detected. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error capturing face descriptor:", error);
+      toast.error("Failed to capture face. Please try again.");
+    }
+  };
+
+  const faceRegister = async () => {
+    try {
+      console.log(faceDescriptor);
+
+      const sendFace = await axios.patch(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/profile/faceregister`,
+        { descriptor: faceDescriptor },
+        { withCredentials: true }
+      );
+      toast.success(sendFace.data.message);
+      if (sendFace.status == 200) {
+        window.location.href = "/home";
+      }
+      // console.log(sendFace);
+    } catch (error) {
+      toast.error(error.response?.data?.message);
+      console.error(error);
+    }
+  };
+
+  const handleFaceAuthClick = () => {
+    setIsFaceAuthActive(!isFaceAuthActive);
   };
 
   const handleChange = (e) => {
@@ -87,6 +222,7 @@ const ProfileSection = () => {
           {profile ? profile.UserName : "Your Avatar"}
         </p>
       </div>
+
       {profile ? (
         <form className="space-y-6">
           <div>
@@ -182,6 +318,82 @@ const ProfileSection = () => {
       ) : (
         <p>Loading profile...</p>
       )}
+
+      <div className="space-y-3">
+        {profile && profile.FaceDescriptor === null && ( // Render only if FaceDescriptor is null
+          <button
+            onClick={handleFaceAuthClick}
+            disabled={loading}
+            className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {loading ? "Processing..." : "🧑‍💼 Register Face"}
+          </button>
+        )}
+
+        {isFaceAuthActive && (
+          <div className="relative">
+            <label className="block text-sm text-gray-500 mb-2">
+              Capture Face
+            </label>
+            {capturedImage ? (
+              <img
+                src={capturedImage}
+                alt="Captured"
+                className="w-48 h-48 border rounded-lg mb-4"
+              />
+            ) : (
+              <video
+                id="videoElement"
+                autoPlay
+                muted
+                className="w-48 h-48 border rounded-lg mb-4"
+              ></video>
+            )}
+            <canvas id="canvasElement" className="hidden"></canvas>
+
+            {!capturedImage && (
+              <button
+                type="button"
+                onClick={
+                  isCameraActive ? captureFaceDescriptor : handleCaptureClick
+                }
+                className={`w-full py-3 rounded-lg ${
+                  isCameraActive
+                    ? "bg-red-500 hover:bg-red-600"
+                    : "bg-blue-500 hover:bg-blue-600"
+                } text-white`}
+              >
+                {isCameraActive ? "Capture" : "Start Camera"}
+              </button>
+            )}
+
+            {capturedImage && (
+              <button
+                type="button"
+                onClick={handleCaptureClick}
+                className="w-full py-3 mt-2 rounded-lg bg-gray-500 hover:bg-gray-600 text-white"
+              >
+                Cancel
+              </button>
+            )}
+          </div>
+        )}
+
+        {isFaceAuthActive && (
+          <button
+            type="button"
+            onClick={faceRegister}
+            disabled={loading}
+            className={`w-full py-3 rounded-lg ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-green-500 hover:bg-green-600"
+            } text-white`}
+          >
+            {loading ? "Verifying..." : "Verify & update"}
+          </button>
+        )}
+      </div>
     </div>
   );
 };

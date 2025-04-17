@@ -236,4 +236,22 @@ const removeFromGroup = async (req, res) => {
     }
 };
 
-export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup, removeFromGroup };
+const stockSuggestions = async (req, res) => {
+    const query = req.query.query.toLowerCase();
+    const userId = req.user.id;
+  
+    try {
+      const userStocks = await Stock.find({ user: userId });
+  
+      const matched = userStocks
+        .filter(stock => stock.ItemName.toLowerCase().includes(query))
+        .map(stock => stock.ItemName);
+  
+      res.status(200).send({ suggestions: matched.slice(0, 5) });
+    } catch (err) {
+      res.status(500).send({ message: "Server error while fetching suggestions" });
+    }
+  }
+  
+
+export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup, removeFromGroup, stockSuggestions };

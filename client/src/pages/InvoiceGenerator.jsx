@@ -9,6 +9,7 @@ import Header from "../components/Header";
 const InvoiceGenerator = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -41,9 +42,30 @@ const InvoiceGenerator = () => {
   const addItem = () => {
     setFormData((prevState) => ({
       ...prevState,
-      items: [...prevState.items, { itemName: "", amountPerItem: "", quantity: "" }],
+      items: [
+        ...prevState.items,
+        { itemName: "", amountPerItem: "", quantity: "" },
+      ],
     }));
   };
+
+  const fetchSuggestions = async (query, index) => {
+    if (!query) return setSuggestions([]);
+  
+    try {
+      const res = await axios.get(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/suggestions?query=${query}`, {withCredentials: true}
+      );
+      const items = res.data.suggestions; // your backend should return { suggestions: [...] }
+      
+      const updatedSuggestions = [...suggestions];
+      updatedSuggestions[index] = items;
+      setSuggestions(updatedSuggestions);
+    } catch (err) {
+      console.error("Error fetching suggestions:", err);
+    }
+  };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -64,12 +86,15 @@ const InvoiceGenerator = () => {
       Date: new Date().toISOString(),
       IsDue:
         formData.amountPaid <
-        formData.items.reduce((total, item) => total + item.amountPerItem * item.quantity, 0),
+        formData.items.reduce(
+          (total, item) => total + item.amountPerItem * item.quantity,
+          0
+        ),
     };
 
     try {
       console.log(formData.discount);
-      
+
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/createInvoice`,
         invoiceData,
@@ -122,10 +147,38 @@ const InvoiceGenerator = () => {
                       type="text"
                       name="itemName"
                       value={item.itemName}
-                      onChange={(e) => handleChange(e, index)}
+                      onChange={(e) => {
+                        handleChange(e, index);
+                        fetchSuggestions(e.target.value, index);
+                      }}
                       className="border rounded px-3 py-2 w-full"
                       required
+                      autoComplete="off"
                     />
+                    {suggestions[index]?.length > 0 && (
+                      <div className="absolute bg-white border border-gray-300 w-full mt-1 z-10 max-h-40 overflow-y-auto rounded shadow">
+                        {suggestions[index].map((suggestion, i) => (
+                          <div
+                            key={i}
+                            onClick={() => {
+                              const updatedItems = [...formData.items];
+                              updatedItems[index].itemName = suggestion;
+                              setFormData((prev) => ({
+                                ...prev,
+                                items: updatedItems,
+                              }));
+
+                              const updated = [...suggestions];
+                              updated[index] = [];
+                              setSuggestions(updated);
+                            }}
+                            className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+                          >
+                            {suggestion}
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
 
                   <div className="relative">
@@ -163,13 +216,24 @@ const InvoiceGenerator = () => {
             <div className="space-y-4">
               {[
                 { label: "Customer Name", name: "customerName", type: "text" },
-                { label: "Customer Email", name: "customerEmail", type: "email" },
+                {
+                  label: "Customer Email",
+                  name: "customerEmail",
+                  type: "email",
+                },
                 { label: "Amount Paid", name: "amountPaid", type: "number" },
                 { label: "Total Discount", name: "discount", type: "number" },
                 { label: "Due Date", name: "dueDate", type: "date" },
-                { label: "Payment Method", name: "paymentMethod", type: "text" },
+                {
+                  label: "Payment Method",
+                  name: "paymentMethod",
+                  type: "text",
+                },
               ].map(({ label, name, type }) => (
-                <div className="flex flex-col md:flex-row md:items-center" key={name}>
+                <div
+                  className="flex flex-col md:flex-row md:items-center"
+                  key={name}
+                >
                   <label className="md:w-40 text-gray-700 mb-1 md:mb-0">
                     {label} :-
                   </label>

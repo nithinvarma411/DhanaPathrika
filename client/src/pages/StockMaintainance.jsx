@@ -305,13 +305,13 @@ function StockMaintainance() {
               <input
                 type="text"
                 placeholder="Search by Name or Code ..."
-                className="px-4 py-2 border rounded-md"
+                className="px-4 py-2 border rounded-md w-[50%]"
                 value={searchQuery}
                 onChange={handleSearch}
               />
             </div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl text-red-700 font-bold">Item Form :</h2>
+              <h2 className="sm:text-2xl text-md text-red-700 font-bold">Stock Maintainance :-</h2>
               <div className="flex space-x-2">
                 <button
                   onClick={() => navigate("/add-stock")}
@@ -333,29 +333,29 @@ function StockMaintainance() {
                   }`}
                   disabled={isEditing}
                 >
-                  Group
+                  <span className="mr-1">+</span> Group
                 </button>
               </div>
             </div>
 
             {isGroupCreationView && (
-              <div className="flex justify-between items-center mb-4">
+              <div className="flex justify-center mb-4">
                 <input
                   type="text"
                   placeholder="Group Name"
-                  className="px-4 py-2 border rounded-md"
+                  className="px-4 py-2 border rounded-md m-2"
                   value={newGroupName}
                   onChange={(e) => setNewGroupName(e.target.value)}
                 />
                 <button
                   onClick={handleCreateGroup}
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600"
+                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 m-2"
                 >
                   Create Group
                 </button>
                 <button
                   onClick={handleCancelGroupCreation}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 m-2"
                 >
                   Cancel
                 </button>

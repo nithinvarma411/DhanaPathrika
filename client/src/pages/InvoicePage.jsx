@@ -4,10 +4,13 @@ import Header from "../components/Header";
 import Invoice from "../components/Invoice";
 import bgImage from "../assets/bg.jpg";
 import domtoimage from "dom-to-image";
+import { toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 const InvoicePage = () => {
   const [invoice, setInvoice] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [isSending, setIsSending] = useState(false); // Loading state for sending email
   const invoiceRef = useRef(null);
 
   const hasFetchedInvoice = useRef(false);
@@ -52,6 +55,27 @@ const InvoicePage = () => {
     }
   }, []);
   
+  const sendInvoiceEmail = async () => {
+    if (!invoiceRef.current) return;
+
+    setIsSending(true); // Start loading
+    try {
+      const dataUrl = await domtoimage.toJpeg(invoiceRef.current, { quality: 0.95 });
+
+      // Send the invoice image to the server
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/send-email`,
+        { image: dataUrl, invoiceId: invoice?._id },
+        { withCredentials: true }
+      );
+      toast.success("Invoice sent to email successfully.");
+    } catch (error) {
+      console.error("Error sending invoice email:", error);
+      toast.error("Failed to send invoice via email.");
+    } finally {
+      setIsSending(false); // End loading
+    }
+  };
 
   const downloadInvoice = async () => {
     if (!invoiceRef.current) return;
@@ -69,7 +93,6 @@ const InvoicePage = () => {
       console.error("Error capturing invoice:", error);
     }
   };
-  
 
   return (
     <div className="flex flex-col h-screen" style={{ backgroundImage: `url(${bgImage})` }}>
@@ -78,12 +101,21 @@ const InvoicePage = () => {
         <div ref={invoiceRef}>
           <Invoice invoice={invoice} profile={profile} />
         </div>
-        <div className="text-center mt-4">
+        <div className="text-center mt-4 flex justify-center gap-4">
           <button 
             onClick={downloadInvoice} 
             className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-red-700"
           >
             Download Invoice
+          </button>
+          <button
+            onClick={sendInvoiceEmail}
+            className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 ${
+              isSending ? "opacity-50 cursor-not-allowed" : ""
+            }`}
+            disabled={isSending}
+          >
+            {isSending ? "Sending..." : "Send Invoice"}
           </button>
         </div>
       </div>

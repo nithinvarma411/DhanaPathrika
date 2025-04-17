@@ -247,7 +247,7 @@ const stockSuggestions = async (req, res) => {
         .filter(stock => stock.ItemName.toLowerCase().includes(query))
         .map(stock => stock.ItemName);
   
-      res.status(200).send({ suggestions: matched.slice(0, 5) });
+      res.status(200).send({ suggestions: matched.slice(0, 10) });
     } catch (err) {
       res.status(500).send({ message: "Server error while fetching suggestions" });
     }

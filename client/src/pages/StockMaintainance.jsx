@@ -16,12 +16,11 @@ function StockMaintainance() {
   const [filteredItems, setFilteredItems] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [actionLoading, setActionLoading] = useState(null);
-  const [groups, setGroups] = useState([]); // New state for groups
-  const [newGroupName, setNewGroupName] = useState(""); // State for new group name
-  const [selectedItems, setSelectedItems] = useState([]); // State for selected items in a group
-  const [isGroupView, setIsGroupView] = useState(false); // State to toggle group view
-  const [currentGroupItems, setCurrentGroupItems] = useState([]); // Items in the current group
-  const [isGroupCreationView, setIsGroupCreationView] = useState(false); // State to toggle group creation view
+  const [groups, setGroups] = useState([]);
+  const [newGroupName, setNewGroupName] = useState("");
+  const [selectedItems, setSelectedItems] = useState([]);
+  const [isGroupView, setIsGroupView] = useState(false);
+  const [isGroupCreationView, setIsGroupCreationView] = useState(false);
 
   const navigate = useNavigate();
 

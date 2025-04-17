@@ -156,7 +156,7 @@ const InvoiceGenerator = () => {
                       autoComplete="off"
                     />
                     {suggestions[index]?.length > 0 && (
-                      <div className="absolute bg-white border border-gray-300 w-full mt-1 z-10 max-h-40 overflow-y-auto rounded shadow">
+                      <div className="absolute bg-white border border-gray-300 w-full mt-1 z-10 max-h-40 overflow-y-auto scrollbar-hide rounded shadow">
                         {suggestions[index].map((suggestion, i) => (
                           <div
                             key={i}

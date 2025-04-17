@@ -1,6 +1,7 @@
 import { Invoice } from "../models/Invoice.model.js";
 import { Stock } from "../models/stock.model.js";
 import mongoose from 'mongoose';
+import nodemailer from "nodemailer";
 
 const createInvoice = async (req, res) => {
     try {
@@ -11,8 +12,8 @@ const createInvoice = async (req, res) => {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
-        if (AmountPaid < 0 || Discount <= 0) {
-            return res.status(400).send({ "message": "Amount and Discount cannot be less than 0" });
+        if (AmountPaid < 0 || Discount < 0) {
+            return res.status(400).send({ "message": "Amount cannot be less than 0" });
         }
 
         // Calculate total amount of all items
@@ -223,4 +224,52 @@ const getLatestInvoice = async (req, res) => {
     }
 };
 
-export {createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice};
+const sendInvoiceEmail = async (req, res) => {
+    try {
+        const { image, invoiceId } = req.body;
+        const userId = req.user.id;
+        const userEmail = req.user.Email;
+        
+
+        if (!image || !invoiceId) {
+            return res.status(400).send({ message: "Image and Invoice ID are required" });
+        }
+
+        const invoice = await Invoice.findOne({ _id: invoiceId, user: userId }).populate("user");
+        if (!invoice) {
+            return res.status(404).send({ message: "Invoice not found" });
+        }
+
+        const transporter = nodemailer.createTransport({
+            service: "gmail",
+            auth: {
+                user: process.env.MY_EMAIL,
+                pass: process.env.NODEMAILER_APP_PASSWORD,
+            },
+        });
+
+        const mailOptions = {
+            from: userEmail,
+            to: invoice.CustomerEmail,
+            subject: `Invoice from ${invoice.user.CompanyName}`,
+            html: `<p>Dear ${invoice.CustomerName},</p>
+                   <p>Please find your invoice attached below.</p>
+                   <p>Thank you for your business!</p>`,
+            attachments: [
+                {
+                    filename: `Invoice_${invoiceId}.jpeg`,
+                    content: image.split("base64,")[1],
+                    encoding: "base64",
+                },
+            ],
+        };
+
+        await transporter.sendMail(mailOptions);
+        return res.status(200).send({ message: "Invoice sent to email successfully" });
+    } catch (error) {
+        console.error("Error sending invoice email:", error);
+        return res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+export { createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice, sendInvoiceEmail };

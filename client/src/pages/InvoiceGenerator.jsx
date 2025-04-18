@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import backgroundImage from "../assets/bg.jpg";
 import Header from "../components/Header";
+import Chatbot from "../components/Chatbot";
 
 const InvoiceGenerator = () => {
   const navigate = useNavigate();
@@ -130,7 +131,7 @@ const InvoiceGenerator = () => {
       <Header />
       <div className="min-h-screen bg-cover bg-center flex items-center justify-center p-4 md:p-8">
         <div className="bg-white w-full max-w-3xl p-6 md:p-8 rounded-lg shadow-lg relative">
-          <h2 className="text-2xl font-bold text-center text-red-600 mb-6">
+          <h2 className="text-2xl font-bold text-center text-red-600 mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
             GENERATE INVOICE
           </h2>
           <form onSubmit={handleSubmit}>
@@ -140,7 +141,7 @@ const InvoiceGenerator = () => {
                 <h3 className="text-lg font-semibold mb-2">Item {index + 1}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
-                    <label className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500">
+                    <label className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500" style={{ fontFamily: 'Roboto, sans-serif' }}>
                       Item Name
                     </label>
                     <input
@@ -154,6 +155,7 @@ const InvoiceGenerator = () => {
                       className="border rounded px-3 py-2 w-full"
                       required
                       autoComplete="off"
+                      style={{ fontFamily: 'Arial, sans-serif' }}
                     />
                     {suggestions[index]?.length > 0 && (
                       <div className="absolute bg-white border border-gray-300 w-full mt-1 z-10 max-h-40 overflow-y-auto scrollbar-hide rounded shadow">
@@ -234,7 +236,7 @@ const InvoiceGenerator = () => {
                   className="flex flex-col md:flex-row md:items-center"
                   key={name}
                 >
-                  <label className="md:w-40 text-gray-700 mb-1 md:mb-0">
+                  <label className="md:w-40 text-gray-700 mb-1 md:mb-0" style={{ fontFamily: 'Roboto, sans-serif' }}>
                     {label} :-
                   </label>
                   <input
@@ -243,6 +245,7 @@ const InvoiceGenerator = () => {
                     value={formData[name]}
                     onChange={handleChange}
                     className="w-full md:w-[55%] border-b border-black outline-none px-2 py-1"
+                    style={{ fontFamily: 'Arial, sans-serif' }}
                   />
                 </div>
               ))}
@@ -276,6 +279,7 @@ const InvoiceGenerator = () => {
           </form>
         </div>
       </div>
+      <Chatbot/>
     </div>
   );
 };

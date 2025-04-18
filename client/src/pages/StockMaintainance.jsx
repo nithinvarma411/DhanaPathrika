@@ -6,6 +6,7 @@ import Swal from "sweetalert2";
 import { toast } from "react-toastify";
 import { ClipLoader } from "react-spinners";
 import { useNavigate } from "react-router-dom";
+import Chatbot from "../components/Chatbot";
 
 function StockMaintainance() {
   const [items, setItems] = useState([]);
@@ -307,10 +308,13 @@ function StockMaintainance() {
                 className="px-4 py-2 border rounded-md w-[50%]"
                 value={searchQuery}
                 onChange={handleSearch}
+                style={{ fontFamily: 'Arial, sans-serif' }}
               />
             </div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="sm:text-2xl text-md text-red-700 font-bold">Stock Maintainance :-</h2>
+              <h2 className="sm:text-2xl text-md text-red-700 font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+                Stock Maintainance :-
+              </h2>
               <div className="flex space-x-2">
                 <button
                   onClick={() => navigate("/add-stock")}
@@ -398,7 +402,7 @@ function StockMaintainance() {
             )}
 
             <div className="overflow-x-auto scrollbar-hide">
-              <table className="w-full border-collapse">
+              <table className="w-full border-collapse" style={{ fontFamily: 'Roboto, sans-serif' }}>
                 <thead>
                   <tr>
                     {isGroupCreationView ? (
@@ -429,7 +433,7 @@ function StockMaintainance() {
                           />
                         </td>
                       ) : (
-                        <td className="border border-gray-300 px-4 py-2">{index + 1}</td>
+                        <td className="border border-gray-300 px-4 py-2" style={{ fontFamily: 'Arial, sans-serif' }}>{index + 1}</td>
                       )}
                       <td className="border border-gray-300 px-4 py-2">
                         <input
@@ -438,6 +442,7 @@ function StockMaintainance() {
                           value={editingRow === index ? editedData.ItemName : item.ItemName}
                           onChange={(e) => handleChange(e, "ItemName")}
                           disabled={editingRow !== index}
+                          style={{ fontFamily: 'Arial, sans-serif' }}
                         />
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
@@ -537,6 +542,7 @@ function StockMaintainance() {
           </div>
         )}
       </div>
+      <Chatbot/>
     </div>
   );
 }

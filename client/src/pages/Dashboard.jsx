@@ -3,6 +3,7 @@ import Header from '../components/Header';
 import MoneyFlowChart from '../components/MoneyFlowChart';
 import ProfileSection from '../components/ProfileSection';
 import bgImage from '../assets/bg.jpg'
+import Chatbot from '../components/Chatbot';
 
 const Dashboard = () => {
   return (
@@ -21,6 +22,7 @@ const Dashboard = () => {
           </div>
         </div>
       </div>
+      <Chatbot/>
     </div>
   );
 };

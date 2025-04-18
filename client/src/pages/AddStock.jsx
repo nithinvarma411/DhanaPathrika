@@ -5,6 +5,7 @@ import "react-toastify/dist/ReactToastify.css";
 import Header from "../components/Header";
 import bgImage from "../assets/bg.jpg";
 import { useNavigate } from "react-router-dom";
+import Chatbot from "../components/Chatbot";
 
 const AddStock = () => {
   const [itemName, setItemName] = useState("");
@@ -200,6 +201,7 @@ const AddStock = () => {
           </form>
         </div>
       </div>
+      <Chatbot/>
     </div>
   );
 };

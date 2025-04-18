@@ -6,6 +6,7 @@ import bgImage from "../assets/bg.jpg";
 import domtoimage from "dom-to-image";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import Chatbot from "../components/Chatbot";
 
 const InvoicePage = () => {
   const [invoice, setInvoice] = useState(null);
@@ -119,6 +120,7 @@ const InvoicePage = () => {
           </button>
         </div>
       </div>
+      <Chatbot/>
     </div>
   );
 };

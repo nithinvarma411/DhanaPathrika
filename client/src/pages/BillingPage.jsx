@@ -3,6 +3,7 @@ import BillingHeader from '../components/BillingHeader';
 import BillingNavTabs from '../components/BillingNavTabs';
 import BillingSearchFilter from '../components/BillingSearchFilter';
 import BillingTable from '../components/BillingTable';
+import Chatbot from '../components/Chatbot';
 
 const BillingPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -15,6 +16,7 @@ const BillingPage = () => {
       <BillingNavTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
       <BillingSearchFilter setSearchQuery={setSearchQuery} setSelectedDate={setSelectedDate} />
       <BillingTable searchQuery={searchQuery} selectedDate={selectedDate} selectedTab={selectedTab} />
+      <Chatbot/>
     </div>
   );
 };

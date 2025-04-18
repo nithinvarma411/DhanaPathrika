@@ -7,6 +7,7 @@ import RecentActivity from "../components/RecentActivity";
 import bgImage from "../assets/bg.jpg";
 import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
+import Chatbot from "../components/Chatbot";
 
 const Home = () => {
   const [invoices, setInvoices] = useState([]);
@@ -65,6 +66,7 @@ const Home = () => {
           </>
         )}
       </div>
+      <Chatbot/>
     </div>
   );
 };

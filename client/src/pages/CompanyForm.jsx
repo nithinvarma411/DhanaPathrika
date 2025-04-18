@@ -6,6 +6,7 @@ import "react-toastify/dist/ReactToastify.css";
 import bg from "../assets/bg.jpg";
 import logo from "../assets/logo.jpg";
 import { useNavigate } from "react-router-dom";
+import Chatbot from "../components/Chatbot";
 
 export default function CompanyForm() {
   const [formData, setFormData] = useState({
@@ -133,6 +134,7 @@ export default function CompanyForm() {
           </div>
         </motion.form>
       </motion.div>
+      <Chatbot/>
     </div>
   );
 }

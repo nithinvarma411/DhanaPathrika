@@ -4,6 +4,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import bg from "../assets/bg.jpg";
 import { useNavigate } from "react-router-dom";
+import Chatbot from "../components/Chatbot";
 
 const PasswordRecovery = () => {
   const [step, setStep] = useState(1);
@@ -157,6 +158,7 @@ const PasswordRecovery = () => {
           </>
         )}
       </div>
+      <Chatbot/>
     </div>
   );
 };

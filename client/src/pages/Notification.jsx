@@ -5,6 +5,7 @@ import axios from "axios";
 import { toast } from "react-toastify";
 import ClipLoader from "react-spinners/ClipLoader";
 import { motion } from "framer-motion";
+import Chatbot from "../components/Chatbot";
 
 const Notification = () => {
   const [notifications, setNotifications] = useState({
@@ -198,6 +199,7 @@ const Notification = () => {
           </motion.div>
         </div>
       )}
+      <Chatbot/>
     </div>
   );
 };

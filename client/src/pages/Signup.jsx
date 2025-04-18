@@ -11,6 +11,7 @@ import mainImage from "../assets/main.jpg";
 import googleIcon from "../assets/google.jpg";
 import appleIcon from "../assets/apple.png";
 import * as faceapi from "face-api.js";
+import Chatbot from "../components/Chatbot";
 
 const Signup = () => {
   const welcomeText = "Welcome to Dhana Pathrika".split(" ");
@@ -190,9 +191,7 @@ const Signup = () => {
           MobileNumber: mobileNumber,
           Email: email,
           Password: password,
-          FaceDescriptor: faceDescriptor
-            ? faceDescriptor
-            : null,
+          FaceDescriptor: faceDescriptor ? faceDescriptor : null,
         };
         // console.log(
         //   "Sending registration request with data:",
@@ -474,6 +473,7 @@ const Signup = () => {
           </p>
         </div>
       </div>
+      <Chatbot />
     </div>
   );
 };

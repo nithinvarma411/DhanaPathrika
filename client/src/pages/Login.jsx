@@ -11,6 +11,7 @@ import mainImage from "../assets/main.jpg";
 import googleIcon from "../assets/google.jpg";
 import appleIcon from "../assets/apple.png";
 import * as faceapi from "face-api.js";
+import Chatbot from "../components/Chatbot";
 
 const Login = () => {
   const welcomeText = "Welcome to Dhana Pathrika".split(" ");
@@ -407,6 +408,7 @@ const Login = () => {
           </p>
         </div>
       </div>
+      <Chatbot/>
     </div>
   );
 };

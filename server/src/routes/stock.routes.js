@@ -1,4 +1,4 @@
-import { addStock, getStock, updateStock, deleteStock, getStockByGroup, createGroup, deleteGroup, removeFromGroup, stockSuggestions } from "../controllers/stock.controller.js";
+import { addStock, getStock, updateStock, deleteStock, getStockByGroup, createGroup, deleteGroup, removeFromGroup, stockSuggestions, addToGroup } from "../controllers/stock.controller.js";
 import {Router} from 'express';
 import rateLimit from 'express-rate-limit';
 
@@ -32,6 +32,7 @@ router.route("/update/:id").put(updateStock);
 router.route("/delete/:id").delete(deleteStock);
 router.route("/deleteGroup").post(deleteGroup);
 router.route("/removeFromGroup").put(removeFromGroup);
-router.route("/suggestions").get(stockSuggestions)
+router.route("/suggestions").get(stockSuggestions);
+router.route("/addToGroup").put(addToGroup); // New route for adding an item to a group
 
 export default router;

@@ -253,5 +253,32 @@ const stockSuggestions = async (req, res) => {
     }
   }
   
-
-export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup, removeFromGroup, stockSuggestions };
+const addToGroup = async (req, res) => {
+    try {
+      const { itemId, groupName } = req.body;
+      const userId = req.user.id;
+  
+      if (!itemId || !groupName) {
+        return res.status(400).send({ message: "Item ID and group name are required" });
+      }
+  
+      const item = await Stock.findOne({ _id: itemId, user: userId });
+  
+      if (!item) {
+        return res.status(404).send({ message: "Item not found or unauthorized access" });
+      }
+  
+      if (item.Group) {
+        return res.status(409).send({ message: "Item already belongs to a group" });
+      }
+  
+      await Stock.findByIdAndUpdate(itemId, { $set: { Group: groupName } });
+  
+      return res.status(200).send({ message: "Item added to group successfully" });
+    } catch (error) {
+      console.error("Error adding item to group:", error);
+      return res.status(500).send({ message: "Internal Server Error" });
+    }
+  };
+  
+export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup, removeFromGroup, stockSuggestions, addToGroup };

@@ -22,6 +22,8 @@ function StockMaintainance() {
   const [selectedItems, setSelectedItems] = useState([]);
   const [isGroupView, setIsGroupView] = useState(false);
   const [isGroupCreationView, setIsGroupCreationView] = useState(false);
+  const [isAddItemView, setIsAddItemView] = useState(false); // New state for Add Item view
+  const [selectedGroup, setSelectedGroup] = useState(null); // Track the selected group
 
   const navigate = useNavigate();
 
@@ -175,6 +177,8 @@ function StockMaintainance() {
     const groupItems = items.filter((item) => item.Group === group);
     setFilteredItems(groupItems); // Update the table to show only group items
     setIsGroupView(true);
+    setSelectedGroup(group); // Set the selected group
+    setIsAddItemView(false); // Reset Add Item view
   };
 
   const handleItemSelection = (itemId) => {
@@ -287,6 +291,30 @@ function StockMaintainance() {
     }
   };
 
+  const handleAddItemButtonClick = () => {
+    setFilteredItems(items.filter((item) => !item.Group)); // Show items without a group
+    setIsAddItemView(true);
+  };
+
+  const handleAddItemToGroup = async (itemId) => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/addToGroup`,
+        { itemId, groupName: selectedGroup },
+        { withCredentials: true }
+      );
+  
+      if (response.status === 200) {
+        toast.success(response.data.message);
+        window.location.reload(); // Reload the page after successful addition
+      } else {
+        toast.error(response.data.message);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error adding item to group");
+    }
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -338,6 +366,14 @@ function StockMaintainance() {
                 >
                   <span className="mr-1">+</span> Group
                 </button>
+                {isGroupView && !isAddItemView && (
+                  <button
+                    onClick={handleAddItemButtonClick}
+                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
+                  >
+                    Add Item
+                  </button>
+                )}
               </div>
             </div>
 
@@ -388,13 +424,19 @@ function StockMaintainance() {
                     setFilteredItems(items); // Reset to show all items
                     setIsGroupView(false);
                   }}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
                 >
                   Show All Items
                 </button>
                 <button
+                  onClick={handleAddItemButtonClick}
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
+                >
+                  Add Item
+                </button>
+                <button
                   onClick={() => handleDeleteGroup(filteredItems[0]?.Group)}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600"
+                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
                 >
                   Delete Group
                 </button>
@@ -492,7 +534,14 @@ function StockMaintainance() {
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <div className="flex justify-center space-x-2">
-                          {editingRow === index ? (
+                          {isAddItemView ? (
+                            <button
+                              className="px-4 py-1 rounded bg-green-500 hover:bg-green-600 text-white"
+                              onClick={() => handleAddItemToGroup(item._id)}
+                            >
+                              Add this Item
+                            </button>
+                          ) : editingRow === index ? (
                             <button
                               className="px-4 py-1 rounded bg-blue-500 hover:bg-blue-600 text-white"
                               onClick={() => handleSave(item._id)}
@@ -513,18 +562,20 @@ function StockMaintainance() {
                               Edit
                             </button>
                           )}
-                          <button
-                            className={`px-4 py-1 rounded ${
-                              isEditing
-                                ? "bg-gray-300 text-gray-800 cursor-not-allowed"
-                                : "bg-red-500 hover:bg-red-600 text-white"
-                            }`}
-                            onClick={() => handleDelete(item._id)}
-                            disabled={isEditing}
-                          >
-                            Delete
-                          </button>
-                          {isGroupView && item.Group && (
+                          {!isAddItemView && (
+                            <button
+                              className={`px-4 py-1 rounded ${
+                                isEditing
+                                  ? "bg-gray-300 text-gray-800 cursor-not-allowed"
+                                  : "bg-red-500 hover:bg-red-600 text-white"
+                              }`}
+                              onClick={() => handleDelete(item._id)}
+                              disabled={isEditing}
+                            >
+                              Delete
+                            </button>
+                          )}
+                          {isGroupView && item.Group && !isAddItemView && (
                             <button
                               className="px-4 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
                               onClick={() => handleRemoveItemFromGroup(item._id)}

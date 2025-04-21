@@ -30,7 +30,7 @@ const RecentActivity = ({ invoices }) => {
           ? `${invoice.CustomerName} paid their invoice`
           : `New invoice for ${invoice.CustomerName}`,
         date: formattedDate,
-        amount: `$${invoice.AmountPaid.toFixed(2)}`,
+        amount: `INR ${invoice.AmountPaid.toFixed(2)}`,
         timestamp: date.getTime(),
       };
     });

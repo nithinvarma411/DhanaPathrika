@@ -42,7 +42,9 @@ function StockMaintainance() {
           setItems(sortedItems);
           setFilteredItems(sortedItems);
 
-          const uniqueGroups = [...new Set(sortedItems.map(item => item.Group).filter(Boolean))];
+          const uniqueGroups = [
+            ...new Set(sortedItems.map((item) => item.Group).filter(Boolean)),
+          ];
           setGroups(uniqueGroups); // Extract unique groups
           toast.success(response.data.message);
         } else {
@@ -78,7 +80,7 @@ function StockMaintainance() {
         SellingPrice: Number(editedData.SellingPrice),
         AvailableQuantity: Number(editedData.AvailableQuantity),
         MinQuantity: Number(editedData.MinQuantity),
-        ItemCode: editedData.ItemCode
+        ItemCode: editedData.ItemCode,
       };
 
       if (
@@ -164,11 +166,14 @@ function StockMaintainance() {
   const handleSearch = (e) => {
     const query = e.target.value.toLowerCase();
     setSearchQuery(query);
-  
-    const sourceItems = isGroupView ? items.filter((item) => item.Group === filteredItems[0]?.Group) : items;
-    const filtered = sourceItems.filter((item) =>
-      item.ItemName.toLowerCase().includes(query) || 
-      (item.ItemCode && item.ItemCode.toLowerCase().includes(query)) // Check if ItemCode exists
+
+    const sourceItems = isGroupView
+      ? items.filter((item) => item.Group === filteredItems[0]?.Group)
+      : items;
+    const filtered = sourceItems.filter(
+      (item) =>
+        item.ItemName.toLowerCase().includes(query) ||
+        (item.ItemCode && item.ItemCode.toLowerCase().includes(query)) // Check if ItemCode exists
     );
     setFilteredItems(filtered);
   };
@@ -182,10 +187,11 @@ function StockMaintainance() {
   };
 
   const handleItemSelection = (itemId) => {
-    setSelectedItems((prevSelected) =>
-      prevSelected.includes(itemId)
-        ? prevSelected.filter((id) => id !== itemId) // Deselect if already selected
-        : [...prevSelected, itemId] // Select if not already selected
+    setSelectedItems(
+      (prevSelected) =>
+        prevSelected.includes(itemId)
+          ? prevSelected.filter((id) => id !== itemId) // Deselect if already selected
+          : [...prevSelected, itemId] // Select if not already selected
     );
   };
 
@@ -194,19 +200,19 @@ function StockMaintainance() {
       toast.error("Group name cannot be empty");
       return;
     }
-  
+
     if (selectedItems.length === 0) {
       toast.error("Please select at least one item for the group");
       return;
     }
-  
+
     try {
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/createGroup`,
         { groupName: newGroupName, itemIds: selectedItems },
         { withCredentials: true }
       );
-  
+
       if (response.status === 201) {
         toast.success(response.data.message);
         setNewGroupName("");
@@ -248,19 +254,23 @@ function StockMaintainance() {
         confirmButtonText: "Yes, delete it!",
         customClass: {
           popup: "custom-swal",
-        }
+        },
       });
-  
+
       if (result.isConfirmed) {
         const response = await axios.post(
           `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/deleteGroup`,
           { groupName: group },
           { withCredentials: true }
         );
-  
+
         if (response.status === 200) {
           setGroups((prevGroups) => prevGroups.filter((g) => g !== group));
-          setFilteredItems(items.map((item) => (item.Group === group ? { ...item, Group: null } : item)));
+          setFilteredItems(
+            items.map((item) =>
+              item.Group === group ? { ...item, Group: null } : item
+            )
+          );
           setIsGroupView(false);
           toast.success(response.data.message);
         } else {
@@ -279,7 +289,7 @@ function StockMaintainance() {
         { itemIds: [itemId] },
         { withCredentials: true }
       );
-  
+
       if (response.status === 200) {
         toast.success(response.data.message);
         window.location.reload(); // Reload the page after successful removal
@@ -287,7 +297,9 @@ function StockMaintainance() {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error removing item from group");
+      toast.error(
+        error.response?.data?.message || "Error removing item from group"
+      );
     }
   };
 
@@ -303,7 +315,7 @@ function StockMaintainance() {
         { itemId, groupName: selectedGroup },
         { withCredentials: true }
       );
-  
+
       if (response.status === 200) {
         toast.success(response.data.message);
         window.location.reload(); // Reload the page after successful addition
@@ -311,7 +323,9 @@ function StockMaintainance() {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Error adding item to group");
+      toast.error(
+        error.response?.data?.message || "Error adding item to group"
+      );
     }
   };
 
@@ -336,11 +350,14 @@ function StockMaintainance() {
                 className="px-4 py-2 border rounded-md w-[50%]"
                 value={searchQuery}
                 onChange={handleSearch}
-                style={{ fontFamily: 'Arial, sans-serif' }}
+                style={{ fontFamily: "Arial, sans-serif" }}
               />
             </div>
             <div className="flex justify-between items-center mb-4">
-              <h2 className="sm:text-2xl text-md text-red-700 font-bold" style={{ fontFamily: 'Poppins, sans-serif' }}>
+              <h2
+                className="sm:text-2xl text-md text-red-700 font-bold"
+                style={{ fontFamily: "Poppins, sans-serif" }}
+              >
                 Stock Maintainance :-
               </h2>
               <div className="flex space-x-2">
@@ -366,14 +383,6 @@ function StockMaintainance() {
                 >
                   <span className="mr-1">+</span> Group
                 </button>
-                {isGroupView && !isAddItemView && (
-                  <button
-                    onClick={handleAddItemButtonClick}
-                    className="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600"
-                  >
-                    Add Item
-                  </button>
-                )}
               </div>
             </div>
 
@@ -444,7 +453,10 @@ function StockMaintainance() {
             )}
 
             <div className="overflow-x-auto scrollbar-hide">
-              <table className="w-full border-collapse" style={{ fontFamily: 'Roboto, sans-serif' }}>
+              <table
+                className="w-full border-collapse"
+                style={{ fontFamily: "Roboto, sans-serif" }}
+              >
                 <thead>
                   <tr>
                     {isGroupCreationView ? (
@@ -452,15 +464,31 @@ function StockMaintainance() {
                         Select
                       </th>
                     ) : (
-                      <th className="border border-gray-300 px-4 py-2 text-left">S.No</th>
+                      <th className="border border-gray-300 px-4 py-2 text-left">
+                        S.No
+                      </th>
                     )}
-                    <th className="border border-gray-300 px-4 py-2 text-left">Item Name</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Item Code</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Cost Price</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Selling Price</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Available Quantity</th>
-                    <th className="border border-gray-300 px-4 py-2 text-left">Min Quantity</th>
-                    <th className="border border-gray-300 px-4 py-2 text-center">Actions</th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Item Name
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Item Code
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Cost Price
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Selling Price
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Available Quantity
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-left">
+                      Min Quantity
+                    </th>
+                    <th className="border border-gray-300 px-4 py-2 text-center">
+                      Actions
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -475,23 +503,36 @@ function StockMaintainance() {
                           />
                         </td>
                       ) : (
-                        <td className="border border-gray-300 px-4 py-2" style={{ fontFamily: 'Arial, sans-serif' }}>{index + 1}</td>
+                        <td
+                          className="border border-gray-300 px-4 py-2"
+                          style={{ fontFamily: "Arial, sans-serif" }}
+                        >
+                          {index + 1}
+                        </td>
                       )}
                       <td className="border border-gray-300 px-4 py-2">
                         <input
                           type="text"
                           className="w-full focus:outline-none"
-                          value={editingRow === index ? editedData.ItemName : item.ItemName}
+                          value={
+                            editingRow === index
+                              ? editedData.ItemName
+                              : item.ItemName
+                          }
                           onChange={(e) => handleChange(e, "ItemName")}
                           disabled={editingRow !== index}
-                          style={{ fontFamily: 'Arial, sans-serif' }}
+                          style={{ fontFamily: "Arial, sans-serif" }}
                         />
                       </td>
                       <td className="border border-gray-300 px-4 py-2">
                         <input
                           type="text"
                           className="w-full focus:outline-none"
-                          value={editingRow === index ? editedData.ItemCode : item.ItemCode}
+                          value={
+                            editingRow === index
+                              ? editedData.ItemCode
+                              : item.ItemCode
+                          }
                           onChange={(e) => handleChange(e, "ItemCode")}
                           disabled={editingRow !== index}
                         />
@@ -500,7 +541,11 @@ function StockMaintainance() {
                         <input
                           type="text"
                           className="w-full focus:outline-none"
-                          value={editingRow === index ? editedData.CostPrice : item.CostPrice}
+                          value={
+                            editingRow === index
+                              ? editedData.CostPrice
+                              : item.CostPrice
+                          }
                           onChange={(e) => handleChange(e, "CostPrice")}
                           disabled={editingRow !== index}
                         />
@@ -509,7 +554,11 @@ function StockMaintainance() {
                         <input
                           type="text"
                           className="w-full focus:outline-none"
-                          value={editingRow === index ? editedData.SellingPrice : item.SellingPrice}
+                          value={
+                            editingRow === index
+                              ? editedData.SellingPrice
+                              : item.SellingPrice
+                          }
                           onChange={(e) => handleChange(e, "SellingPrice")}
                           disabled={editingRow !== index}
                         />
@@ -518,7 +567,13 @@ function StockMaintainance() {
                         <input
                           type="text"
                           className="w-full focus:outline-none"
-                          value={editingRow === index ? editedData.AvailableQuantity : item.AvailableQuantity}
+                          value={
+                            editingRow === index
+                              ? editedData.AvailableQuantity
+                              : `${item.AvailableQuantity} ${
+                                  item.Unit === "l" ? "L" : item.Unit || ""
+                                }`.trim()
+                          }
                           onChange={(e) => handleChange(e, "AvailableQuantity")}
                           disabled={editingRow !== index}
                         />
@@ -527,7 +582,13 @@ function StockMaintainance() {
                         <input
                           type="text"
                           className="w-full focus:outline-none"
-                          value={editingRow === index ? editedData.MinQuantity : item.MinQuantity}
+                          value={
+                            editingRow === index
+                              ? editedData.MinQuantity
+                              : `${item.MinQuantity} ${
+                                  item.Unit === "l" ? "L" : item.Unit || ""
+                                }`.trim()
+                          }
                           onChange={(e) => handleChange(e, "MinQuantity")}
                           disabled={editingRow !== index}
                         />
@@ -547,7 +608,9 @@ function StockMaintainance() {
                               onClick={() => handleSave(item._id)}
                               disabled={actionLoading === item._id}
                             >
-                              {actionLoading === item._id ? "Saving..." : "Save"}
+                              {actionLoading === item._id
+                                ? "Saving..."
+                                : "Save"}
                             </button>
                           ) : (
                             <button
@@ -578,7 +641,9 @@ function StockMaintainance() {
                           {isGroupView && item.Group && !isAddItemView && (
                             <button
                               className="px-4 py-1 rounded bg-yellow-500 hover:bg-yellow-600 text-white"
-                              onClick={() => handleRemoveItemFromGroup(item._id)}
+                              onClick={() =>
+                                handleRemoveItemFromGroup(item._id)
+                              }
                             >
                               Remove from Group
                             </button>
@@ -593,7 +658,7 @@ function StockMaintainance() {
           </div>
         )}
       </div>
-      <Chatbot/>
+      <Chatbot />
     </div>
   );
 }

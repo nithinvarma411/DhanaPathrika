@@ -14,9 +14,34 @@ const AddStock = () => {
   const [costPrice, setCostPrice] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
   const [itemCode, setItemCode] = useState("");
+  const [unit, setUnit] = useState("pcs");
   const [isLoading, setIsLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  const getCostPriceLabel = () => {
+    if (unit === "pcs") {
+        return "Cost Price (per piece)";
+    } else if (unit === "kg") {
+        return "Cost Price (per kilogram)";
+    } else if (unit === "L") {
+        return "Cost Price (per litre)";
+    } else {
+        return "Cost Price";
+    }
+  };
+
+  const getSellingPriceLabel = () => {
+    if (unit === "pcs") {
+        return "Selling Price (per piece)";
+    } else if (unit === "kg") {
+        return "Selling Price (per kilogram)";
+    } else if (unit === "L") {
+        return "Selling Price (per litre)";
+    } else {
+        return "Selling Price";
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,7 +56,8 @@ const AddStock = () => {
           MinQuantity: minimumQuantity,
           CostPrice: costPrice,
           SellingPrice: sellingPrice,
-          ItemCode: itemCode
+          ItemCode: itemCode,
+          Unit: unit
         },
         {
           withCredentials: true,
@@ -83,13 +109,25 @@ const AddStock = () => {
               >
                 Available Quantity
               </label>
-              <input
-                type="number"
-                id="availableQuantity"
-                value={availableQuantity}
-                onChange={(e) => setAvailableQuantity(e.target.value)}
-                className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
-              />
+              <div className="flex">
+                <input
+                  type="number"
+                  id="availableQuantity"
+                  value={availableQuantity}
+                  onChange={(e) => setAvailableQuantity(e.target.value)}
+                  className="w-full border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+                <select
+                  id="unit"
+                  value={unit}
+                  onChange={(e) => setUnit(e.target.value)}
+                  className="ml-2 border border-gray-300 rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  <option value="pcs">Pieces</option>
+                  <option value="kg">Kilograms</option>
+                  <option value="L">Liters</option>
+                </select>
+              </div>
             </div>
 
             <div className="relative">
@@ -130,7 +168,7 @@ const AddStock = () => {
                   htmlFor="costPrice"
                   className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
                 >
-                  Cost Price
+                  {getCostPriceLabel()}
                 </label>
                 <input
                   type="number"
@@ -146,7 +184,7 @@ const AddStock = () => {
                   htmlFor="sellingPrice"
                   className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
                 >
-                  Selling Price
+                  {getSellingPriceLabel()}
                 </label>
                 <input
                   type="number"

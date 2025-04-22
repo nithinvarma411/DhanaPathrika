@@ -3,11 +3,15 @@ import mongoose from 'mongoose';
 
 const addStock = async (req, res) => {
     try {
-        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode, Group } = req.body;
+        const { ItemName, CostPrice, SellingPrice, AvailableQuantity, MinQuantity, ItemCode, Group, Unit } = req.body;
         const userId = req.user.id;
 
-        if (!ItemName || isNaN(CostPrice) || isNaN(SellingPrice) || isNaN(AvailableQuantity) || isNaN(MinQuantity)) {
+        if (!ItemName || isNaN(CostPrice) || isNaN(SellingPrice) || isNaN(AvailableQuantity) || isNaN(MinQuantity) || !Unit) {
             return res.status(400).send({ "message": "All Fields are required" });
+        }
+
+        if (!['pcs', 'kg', 'L'].includes(Unit)) {
+            return res.status(400).send({ "message": "Invalid Unit value" });
         }
 
         const existedItem = await Stock.findOne({ ItemName, user: userId });
@@ -31,6 +35,7 @@ const addStock = async (req, res) => {
             MinQuantity,
             ItemCode,
             Group,
+            Unit,
             user: userId
         });
 
@@ -281,4 +286,22 @@ const addToGroup = async (req, res) => {
     }
   };
   
-export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup, removeFromGroup, stockSuggestions, addToGroup };
+const getStockByName = async (req, res) => {
+    try {
+        const { name } = req.query;
+        const userId = req.user.id;
+
+        const stockItem = await Stock.findOne({ ItemName: name, user: userId });
+
+        if (!stockItem) {
+            return res.status(404).send({ message: "Stock item not found" });
+        }
+
+        return res.status(200).send({ unit: stockItem.Unit });
+    } catch (error) {
+        console.error("Error fetching stock by name:", error);
+        return res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+export { addStock, getStock, getStockByGroup, updateStock, deleteStock, createGroup, deleteGroup, removeFromGroup, stockSuggestions, addToGroup, getStockByName };

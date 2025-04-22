@@ -51,6 +51,9 @@ app.use("/api/v1/twilio", twilioRouter);
 // Google OAuth routes
 import { googleAuth, googleAuthCallback, googleAuthSuccess } from '../src/controllers/user.controller.js';
 
+app.get("/", (req, res) => {
+    res.send('api working')
+})
 app.get("/auth/google", googleAuth);
 app.get("/auth/google/callback", googleAuthCallback, googleAuthSuccess);
 

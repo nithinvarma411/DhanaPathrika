@@ -1,7 +1,35 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
 
 const Invoice = ({ invoice, profile }) => {
-  if (!invoice || !profile) {
+  const [units, setUnits] = useState({}); // Store units for each item
+  const [isLoadingUnits, setIsLoadingUnits] = useState(true); // Track loading state for units
+
+  useEffect(() => {
+    const fetchUnits = async () => {
+      try {
+        const unitMap = {};
+        for (const item of invoice.Items) {
+          const res = await axios.get(
+            `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/getStockByName?name=${item.Name}`,
+            { withCredentials: true }
+          );
+          unitMap[item.Name] = res.data.unit || "";
+        }
+        setUnits(unitMap);
+      } catch (error) {
+        console.error("Error fetching units:", error);
+      } finally {
+        setIsLoadingUnits(false); // Mark unit fetching as complete
+      }
+    };
+
+    if (invoice?.Items?.length) {
+      fetchUnits();
+    }
+  }, [invoice]);
+
+  if (!invoice || !profile || isLoadingUnits) {
     return <p className="text-center p-4">Loading...</p>;
   }
 
@@ -67,8 +95,12 @@ const Invoice = ({ invoice, profile }) => {
                   {invoice.Items.map((item, index) => (
                     <tr key={index} className="border-b border-gray-300">
                       <td className="py-2 px-2 sm:px-4 break-words">{item.Name}</td>
-                      <td className="py-2 px-2 sm:px-4 text-right">{item.Quantity}</td>
-                      <td className="py-2 px-2 sm:px-4 text-right">₹ {item.AmountPerItem}</td>
+                      <td className="py-2 px-2 sm:px-4 text-right">
+                        {item.Quantity} {units[item.Name] || ""}
+                      </td>
+                      <td className="py-2 px-2 sm:px-4 text-right">
+                        ₹ {item.Quantity * item.AmountPerItem}
+                      </td>
                     </tr>
                   ))}
 

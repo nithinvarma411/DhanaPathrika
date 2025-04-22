@@ -11,6 +11,7 @@ const InvoiceGenerator = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
+  const [units, setUnits] = useState({}); // Store units for each item
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -22,7 +23,7 @@ const InvoiceGenerator = () => {
     items: [{ itemName: "", amountPerItem: "", quantity: "" }],
   });
 
-  const handleChange = (e, index = null) => {
+  const handleChange = async (e, index = null) => {
     const { name, value } = e.target;
 
     if (index !== null) {
@@ -32,6 +33,43 @@ const InvoiceGenerator = () => {
         ...prevState,
         items: updatedItems,
       }));
+
+      if (name === "itemName" && value.trim() !== "") {
+        try {
+          const res = await axios.get(
+            `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/suggestions?query=${value}`,
+            { withCredentials: true }
+          );
+          const items = res.data.suggestions;
+
+          const updatedSuggestions = [...suggestions];
+          updatedSuggestions[index] = items;
+          setSuggestions(updatedSuggestions);
+
+          // Fetch the unit for the selected item
+          const stockItemRes = await axios.get(
+            `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/getStockByName?name=${value}`,
+            { withCredentials: true }
+          );
+          if (stockItemRes.data && stockItemRes.data.unit) {
+            setUnits((prevUnits) => ({
+              ...prevUnits,
+              [index]: stockItemRes.data.unit,
+            }));
+          } else {
+            setUnits((prevUnits) => ({
+              ...prevUnits,
+              [index]: null, // Reset unit if not found
+            }));
+          }
+        } catch (err) {
+          console.error("Error fetching item details:", err);
+          setUnits((prevUnits) => ({
+            ...prevUnits,
+            [index]: null, // Reset unit on error
+          }));
+        }
+      }
     } else {
       setFormData((prevState) => ({
         ...prevState,
@@ -126,6 +164,14 @@ const InvoiceGenerator = () => {
     formData.items[0].amountPerItem.trim() !== "" &&
     formData.items[0].quantity.trim() !== "";
 
+  const getAmountPerItemLabel = (index) => {
+    const unit = units[index];
+    if (unit === "pcs") return "Amount Per Item (After discount)";
+    if (unit === "kg") return "Amount Per kg (After discount)";
+    if (unit === "L") return "Amount Per Litre (After discount)";
+    return "Amount Per Item"; // Default label
+  };
+
   return (
     <div style={{ backgroundImage: `url(${backgroundImage})` }}>
       <Header />
@@ -162,7 +208,7 @@ const InvoiceGenerator = () => {
                         {suggestions[index].map((suggestion, i) => (
                           <div
                             key={i}
-                            onClick={() => {
+                            onClick={async () => {
                               const updatedItems = [...formData.items];
                               updatedItems[index].itemName = suggestion;
                               setFormData((prev) => ({
@@ -173,6 +219,31 @@ const InvoiceGenerator = () => {
                               const updated = [...suggestions];
                               updated[index] = [];
                               setSuggestions(updated);
+
+                              // Fetch the unit for the selected item
+                              try {
+                                const stockItemRes = await axios.get(
+                                  `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/getStockByName?name=${suggestion}`,
+                                  { withCredentials: true }
+                                );
+                                if (stockItemRes.data && stockItemRes.data.unit) {
+                                  setUnits((prevUnits) => ({
+                                    ...prevUnits,
+                                    [index]: stockItemRes.data.unit,
+                                  }));
+                                } else {
+                                  setUnits((prevUnits) => ({
+                                    ...prevUnits,
+                                    [index]: null, // Reset unit if not found
+                                  }));
+                                }
+                              } catch (err) {
+                                console.error("Error fetching item details:", err);
+                                setUnits((prevUnits) => ({
+                                  ...prevUnits,
+                                  [index]: null, // Reset unit on error
+                                }));
+                              }
                             }}
                             className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
                           >
@@ -185,7 +256,7 @@ const InvoiceGenerator = () => {
 
                   <div className="relative">
                     <label className="absolute left-2 -top-3 bg-white px-1 text-sm text-gray-500">
-                      Amount Per Item (after discount)
+                      {getAmountPerItemLabel(index)}
                     </label>
                     <input
                       type="number"

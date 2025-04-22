@@ -25,9 +25,6 @@ const createInvoice = async (req, res) => {
                 return res.status(404).send({ "message": `Stock item '${item.Name}' not found, Please check the spelling it must be exactly same` });
             }
 
-            // console.log(stockItem.AvailableQuantity, item.Quantity);
-            
-
             if (stockItem.AvailableQuantity < item.Quantity) {
                 return res.status(400).send({ "message": `Not enough stock for '${item.Name}'` });
             }
@@ -35,12 +32,8 @@ const createInvoice = async (req, res) => {
             stockItem.AvailableQuantity -= item.Quantity;
             await stockItem.save();
 
-            totalAmount += item.AmountPerItem * item.Quantity; // Calculate total amount
-            // console.log(item.AmountPerItem, item.Quantity);
-            
+            totalAmount += item.AmountPerItem * item.Quantity;
         }
-        // console.log(totalAmount);
-        
 
         // Check if DueDate is required
         if (AmountPaid < totalAmount && !DueDate) {

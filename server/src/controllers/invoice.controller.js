@@ -265,4 +265,28 @@ const sendInvoiceEmail = async (req, res) => {
     }
 };
 
-export { createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice, sendInvoiceEmail };
+const getMonthlyIncome = async (req, res) => {
+    try {
+        const userId = req.user.id;
+
+        const invoices = await Invoice.find({ user: userId });
+
+        if (!invoices || invoices.length === 0) {
+            return res.status(404).send({ message: "No invoices found" });
+        }
+
+        const monthlyIncome = Array(12).fill(0);
+
+        invoices.forEach(invoice => {
+            const month = new Date(invoice.Date).getMonth();
+            monthlyIncome[month] += invoice.AmountPaid;
+        });
+
+        return res.status(200).send({ message: "Monthly income retrieved", data: monthlyIncome });
+    } catch (error) {
+        console.error("Error fetching monthly income:", error);
+        return res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
+export { createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice, sendInvoiceEmail, getMonthlyIncome };

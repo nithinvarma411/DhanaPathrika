@@ -69,6 +69,7 @@ const MoneyFlowChart = () => {
       },
       tooltip: {
         enabled: true, // Ensure tooltips are enabled
+        intersect: false, // Show tooltip when hovering over the line segment
         callbacks: {
           label: context => {
             const income = context.raw;
@@ -102,7 +103,7 @@ const MoneyFlowChart = () => {
   };
 
   return (
-    <div className="flex justify-center items-center h-full">
+    <div className="hidden lg:flex justify-center items-center h-full"> {/* Show only on laptop and larger screens */}
       <div className="bg-transparent rounded-3xl p-6 text-white shadow-lg outline-3 outline-white h-full w-full max-w-5xl">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-red-400">Money Flow</h2>

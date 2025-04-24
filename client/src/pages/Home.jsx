@@ -57,7 +57,7 @@ const Home = () => {
             <StatsSummary invoices={invoices} />
             <div className="flex flex-wrap mt-8 px-4 gap-4">
               <div className="flex-1 min-w-80">
-                <InvoiceChart />
+                <InvoiceChart invoices={invoices} />
               </div>
               <div className="flex-1 min-w-80">
                 <RecentActivity invoices={invoices} />

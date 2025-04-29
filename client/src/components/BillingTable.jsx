@@ -126,6 +126,53 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     }
   };
 
+  const handleDelete = async (invoiceId) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#d33",
+      cancelButtonColor: "#3085d6",
+      confirmButtonText: "Yes, delete it!",
+      customClass: {
+        popup: "custom-swal",
+      },
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      await axios.delete(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/deleteInvoice/${invoiceId}`,
+        { withCredentials: true }
+      );
+
+      setBillingData(billingData.filter(invoice => invoice._id !== invoiceId));
+      
+      Swal.fire({
+        title: "Deleted!",
+        text: "Invoice has been deleted.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        customClass: {
+          popup: "custom-swal",
+        },
+      });
+    } catch (error) {
+      console.error("Error deleting invoice:", error);
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to delete invoice.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+        customClass: {
+          popup: "custom-swal",
+        },
+      });
+    }
+  };
+
   const handleDownload = () => {
     if (invoiceRef.current) {
       DomToImage.toJpeg(invoiceRef.current, { quality: 0.95 })
@@ -148,17 +195,39 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
     // Match month filter
     let matchesMonth = true;
-    if (monthFilter !== "This Month") {
+    if (monthFilter !== "This Month" && monthFilter !== "Show All") {
       const selectedMonthDiff = parseInt(monthFilter.split(" ")[0]); // e.g., "2 Months Ago" => 2
-      const filterDate = new Date();
-      filterDate.setMonth(currentDate.getMonth() - selectedMonthDiff);
+      const startOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - selectedMonthDiff,
+        1
+      );
+      const endOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() - selectedMonthDiff + 1,
+         0,
+         23,
+         59,
+         59,
+         999
+      ); // Ensure the end of the month includes the last day
+
       matchesMonth =
-        invoiceDate.getMonth() === filterDate.getMonth() &&
-        invoiceDate.getFullYear() === filterDate.getFullYear();
-    } else {
+        invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
+    } else if (monthFilter === "This Month") {
+      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const endOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth() + 1,
+        0,
+        23,
+        59,
+        59,
+        999
+      );
+
       matchesMonth =
-        invoiceDate.getMonth() === currentDate.getMonth() &&
-        invoiceDate.getFullYear() === currentDate.getFullYear();
+        invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
     }
 
     const matchesSearch =
@@ -206,10 +275,10 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                 <button
                   key={index}
                   onClick={() => setMonthFilter(label)}
-                  className={`px-3 py-1 rounded border text-sm ${
+                  className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                     monthFilter === label
-                      ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-800"
+                      ? "bg-blue-500 text-white shadow-md transform scale-105"
+                      : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-gray-200 hover:border-gray-300 hover:shadow-sm"
                   }`}
                 >
                   {label}
@@ -219,137 +288,130 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
               {/* Show All button */}
               <button
                 onClick={() => setMonthFilter("Show All")}
-                className={`px-3 py-1 rounded border text-sm ${
+                className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
                   monthFilter === "Show All"
-                    ? "bg-blue-500 text-white"
-                    : "bg-white text-gray-800"
+                    ? "bg-blue-500 text-white shadow-md transform scale-105"
+                    : "bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 border border-gray-200 hover:border-gray-300 hover:shadow-sm"
                 }`}
               >
                 Show All
               </button>
             </div>
 
-            {/* Table or No Data Message */}
             {filteredData.length > 0 ? (
-              <div className="overflow-x-auto">
-                <table className="min-w-full text-sm border border-gray-300">
-                  <thead className="bg-gray-100">{/* header columns */}</thead>
-                  <tbody>
-                    {filteredData.map((item, index) => (
-                      <tr key={index}>{/* row data */}</tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <table className="w-full border-collapse text-sm md:text-base bg-white shadow-sm rounded-lg overflow-hidden">
+                <thead className="bg-gray-100 border-b">
+                  <tr>
+                    <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Invoice Number
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Vendor
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Billing Date
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Due Date
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Due Amount
+                    </th>
+                    <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Status
+                    </th>
+                    <th className="px-4 py-4 text-right text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Amount
+                    </th>
+                    <th className="px-4 py-4 text-right text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {filteredData.map((row, index) => (
+                    <tr
+                      key={index}
+                      className="hover:bg-gray-50 transition-colors duration-200 ease-in-out cursor-pointer"
+                      onClick={() => {
+                        setSelectedInvoice(row);
+                        setShowInvoiceModal(true);
+                      }}
+                    >
+                      <td className="px-4 py-4 whitespace-nowrap text-gray-600 font-medium">
+                        {row._id}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-gray-800 font-medium">
+                        {row.CustomerName}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-gray-600">
+                        {new Date(row.Date).toLocaleDateString("en-GB")}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-gray-600">
+                        {row.DueDate
+                          ? new Date(row.DueDate).toLocaleDateString("en-GB")
+                          : "No Due"}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-gray-600 font-medium">
+                        ₹{(() => {
+                          const totalAmount = row.Items.reduce(
+                            (sum, item) => sum + item.AmountPerItem * item.Quantity,
+                            0
+                          );
+                          return Math.max(totalAmount - row.AmountPaid, 0).toLocaleString();
+                        })()}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap">
+                        <span
+                          className={`px-3 py-1 inline-flex text-xs md:text-sm leading-5 font-semibold rounded-full ${
+                            !row.IsDue
+                              ? "bg-green-100 text-green-700 border border-green-200"
+                              : "bg-red-100 text-red-700 border border-red-200"
+                          }`}
+                        >
+                          {row.IsDue ? "Unpaid" : "Paid"}
+                        </span>
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-right text-gray-600 font-medium">
+                        ₹{row.AmountPaid.toLocaleString()}
+                      </td>
+                      <td className="px-4 py-4 whitespace-nowrap text-right">
+                        <div className="flex justify-end gap-2">
+                          <button
+                            className={`px-4 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
+                              !row.IsDue
+                                ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                                : "bg-green-500 text-white hover:bg-green-600 shadow-sm hover:shadow"
+                            }`}
+                            disabled={!row.IsDue}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleMarkAsPaid(row._id);
+                            }}
+                          >
+                            {row.IsDue ? "Mark as Paid" : "Paid"}
+                          </button>
+                          <button
+                            className="px-4 py-2 rounded-md text-sm font-medium bg-red-500 text-white hover:bg-red-600 shadow-sm hover:shadow transition-all duration-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDelete(row._id);
+                            }}
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             ) : (
               <p className="text-center text-gray-500 mt-4 text-sm">
                 No data found for "{monthFilter}"
               </p>
             )}
           </div>
-
-          <table className="w-full border-collapse text-sm md:text-base">
-            <thead className="bg-gray-50 border-b">
-              <tr>
-                <th className="px-2 py-3 text-left text-xs md:text-sm font-medium text-gray-500 uppercase tracking-wider">
-                  <input type="checkbox" className="form-checkbox" />
-                </th>
-                <th className="px-2 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Invoice Number
-                </th>
-                <th className="px-2 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Vendor
-                </th>
-                <th className="px-2 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Billing Date
-                </th>
-                <th className="px-2 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Due Date
-                </th>
-                <th className="px-2 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Due Amount
-                </th>
-                <th className="px-2 md:px-4 py-3 text-left text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Status
-                </th>
-                <th className="px-2 md:px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Amount
-                </th>
-                <th className="px-2 md:px-4 py-3 text-right text-xs md:text-sm font-medium text-gray-500 uppercase">
-                  Action
-                </th>
-              </tr>
-            </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
-              {filteredData.map((row, index) => (
-                <tr
-                  key={index}
-                  className="hover:bg-gray-50 cursor-pointer"
-                  onClick={() => {
-                    setSelectedInvoice(row);
-                    setShowInvoiceModal(true);
-                  }}
-                >
-                  <td className="px-2 md:px-4 py-3">
-                    <input type="checkbox" className="form-checkbox" />
-                  </td>
-                  <td className="px-2 md:px-4 py-3 text-gray-500 truncate max-w-[150px] md:max-w-full">
-                    {row._id}
-                  </td>
-                  <td className="px-2 md:px-4 py-3 text-gray-900">
-                    {row.CustomerName}
-                  </td>
-                  <td className="px-2 md:px-4 py-3 text-gray-500">
-                    {new Date(row.Date).toLocaleDateString("en-GB")}
-                  </td>
-                  <td className="px-2 md:px-4 py-3 text-gray-500">
-                    {row.DueDate
-                      ? new Date(row.DueDate).toLocaleDateString("en-GB")
-                      : "No Due"}
-                  </td>
-                  <td className="px-2 md:px-4 py-3 text-gray-500">
-                    {(() => {
-                      const totalAmount = row.Items.reduce(
-                        (sum, item) => sum + item.AmountPerItem * item.Quantity,
-                        0
-                      );
-                      return Math.max(totalAmount - row.AmountPaid, 0);
-                    })()}
-                  </td>
-                  <td className="px-2 md:px-4 py-3">
-                    <span
-                      className={`px-2 inline-flex text-xs md:text-sm leading-5 font-semibold rounded-full ${
-                        !row.IsDue
-                          ? "bg-green-100 text-green-800"
-                          : "bg-red-100 text-red-800"
-                      }`}
-                    >
-                      {row.IsDue ? "Unpaid" : "Paid"}
-                    </span>
-                  </td>
-                  <td className="px-2 md:px-4 py-3 text-right text-gray-500">
-                    {row.AmountPaid}
-                  </td>
-                  <td className="px-2 md:px-4 py-3 text-right">
-                    <button
-                      className={`px-2 md:px-3 py-1 text-xs md:text-sm font-medium rounded transition-all ${
-                        !row.IsDue
-                          ? "bg-gray-300 text-gray-700 cursor-not-allowed"
-                          : "bg-green-500 text-white hover:bg-green-600"
-                      }`}
-                      disabled={!row.IsDue}
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleMarkAsPaid(row._id);
-                      }}
-                    >
-                      {row.IsDue ? "Mark as Paid" : "Paid"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
         </div>
       </div>
 

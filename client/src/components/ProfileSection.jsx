@@ -192,141 +192,139 @@ const ProfileSection = () => {
   };
 
   return (
-    <div className="bg-white rounded-3xl p-6 shadow-lg h-screen overflow-y-auto">
-      <h2 className="text-red-600 text-2xl font-semibold mb-6">Profile :</h2>
-      <div className="flex flex-col items-center mb-6">
-        <div className="bg-gray-200 w-24 h-24 rounded-full flex items-center justify-center mb-2 overflow-hidden">
+    <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 shadow-lg h-screen overflow-y-auto">
+      <h2 className="text-3xl font-bold bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent mb-8">Profile</h2>
+      
+      <div className="flex flex-col items-center mb-8">
+        <div className="bg-gradient-to-br from-gray-100 to-gray-200 w-28 h-28 rounded-full flex items-center justify-center mb-4 overflow-hidden shadow-lg">
           {profile && profile.Logo ? (
-            <img
-              src={profile.Logo}
-              alt="Profile Logo"
-              className="w-full h-full object-cover"
-            />
+            <img src={profile.Logo} alt="Profile Logo" className="w-full h-full object-cover" />
           ) : (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              className="h-12 w-12"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                clipRule="evenodd"
-              />
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-14 w-14 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clipRule="evenodd" />
             </svg>
           )}
         </div>
-
-        <p className="text-gray-700 font-medium">
+        <p className="text-lg font-semibold text-gray-700">
           {profile ? profile.UserName : "Your Avatar"}
         </p>
       </div>
 
       {profile ? (
         <form className="space-y-6">
-          <div>
-            <label className="block text-gray-700 mb-1">Company Name</label>
-            <input
-              type="text"
-              name="CompanyName"
-              className="w-full border border-gray-300 rounded-lg p-3"
-              value={formData.CompanyName}
-              onChange={handleChange}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">UserName</label>
-            <input
-              type="text"
-              name="UserName"
-              className="w-full border border-gray-300 rounded-lg p-3"
-              value={formData.UserName}
-              onChange={handleChange}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Mobile No.</label>
-            <div className="flex">
-              <div className="flex items-center border border-gray-300 rounded-l-lg px-3 bg-gray-50">
-                <span>91</span>
-                <span className="ml-1">+</span>
-              </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Company Name</label>
               <input
                 type="text"
-                name="MobileNumber"
-                className="w-full border border-gray-300 rounded-r-lg p-3"
-                value={formData.MobileNumber}
+                name="CompanyName"
+                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                value={formData.CompanyName}
+                onChange={handleChange}
+                readOnly={!isEditing}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">UserName</label>
+              <input
+                type="text"
+                name="UserName"
+                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                value={formData.UserName}
+                onChange={handleChange}
+                readOnly={!isEditing}
+              />
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Mobile No.</label>
+              <div className="flex">
+                <div className="flex items-center border border-gray-200 rounded-l-lg px-3 bg-gray-50">
+                  <span>91</span>
+                  <span className="ml-1">+</span>
+                </div>
+                <input
+                  type="text"
+                  name="MobileNumber"
+                  className="w-full border border-gray-200 rounded-r-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                  value={formData.MobileNumber}
+                  readOnly
+                />
+              </div>
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Email</label>
+              <input
+                type="email"
+                name="Email"
+                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                value={formData.Email}
                 readOnly
               />
             </div>
           </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Email</label>
-            <input
-              type="email"
-              name="Email"
-              className="w-full border border-gray-300 rounded-lg p-3"
-              value={formData.Email}
-              readOnly
-            />
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Business Address</label>
+              <input
+                type="text"
+                name="BussinessAdress"
+                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                value={formData.BussinessAdress}
+                onChange={handleChange}
+                readOnly={!isEditing}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="block text-sm font-medium text-gray-700">Pincode</label>
+              <input
+                type="text"
+                name="Pincode"
+                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                value={formData.Pincode}
+                onChange={handleChange}
+                readOnly={!isEditing}
+              />
+            </div>
           </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Business Address</label>
-            <input
-              type="text"
-              name="BussinessAdress"
-              className="w-full border border-gray-300 rounded-lg p-3"
-              value={formData.BussinessAdress}
-              onChange={handleChange}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div>
-            <label className="block text-gray-700 mb-1">Pincode</label>
-            <input
-              type="text"
-              name="Pincode"
-              className="w-full border border-gray-300 rounded-lg p-3"
-              value={formData.Pincode}
-              onChange={handleChange}
-              readOnly={!isEditing}
-            />
-          </div>
-          <div className="flex justify-end space-x-4">
+
+          <div className="flex justify-end space-x-4 mt-8">
             {!isEditing ? (
               <button
                 type="button"
-                className="bg-blue-500 text-white px-4 py-2 rounded-lg"
+                className="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition shadow-md hover:shadow-lg"
                 onClick={handleEditClick}
               >
-                Edit
+                Edit Profile
               </button>
             ) : (
               <button
                 type="button"
-                className="bg-green-500 text-white px-4 py-2 rounded-lg"
+                className="px-6 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition shadow-md hover:shadow-lg"
                 onClick={handleSaveClick}
               >
-                Save
+                Save Changes
               </button>
             )}
           </div>
         </form>
       ) : (
-        <p>Loading profile...</p>
+        <div className="flex items-center justify-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-red-500"></div>
+        </div>
       )}
 
-      <div className="space-y-3">
-        {profile && profile.FaceDescriptor === null && ( // Render only if FaceDescriptor is null
+      <div className="mt-8 space-y-4">
+        {profile && profile.FaceDescriptor === null && (
           <button
             onClick={handleFaceAuthClick}
             disabled={loading}
-            className="w-full flex items-center justify-center border p-3 rounded-lg hover:bg-gray-100 hover:shadow-md disabled:cursor-not-allowed disabled:opacity-50"
+            className="w-full flex items-center justify-center bg-gradient-to-r from-red-500 to-red-600 text-white p-4 rounded-lg hover:from-red-600 hover:to-red-700 transition shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Processing..." : "🧑‍💼 Register Face"}
+            {loading ? "Processing..." : "🧑‍💼 Register Face Authentication"}
           </button>
         )}
 

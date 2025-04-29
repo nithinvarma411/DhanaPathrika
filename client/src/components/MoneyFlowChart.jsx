@@ -42,18 +42,23 @@ const MoneyFlowChart = () => {
   }, [currentYear]);
 
   const data = {
-    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'], // All months
+    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
     datasets: [
       {
         label: 'Monthly Income',
         data: monthlyIncome,
-        fill: false,
-        borderColor: '#ef4444', // Default color
+        fill: true,
+        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+        borderColor: '#ef4444',
         tension: 0.4,
+        pointRadius: 4,
+        pointBackgroundColor: '#fff',
+        pointBorderColor: '#ef4444',
+        pointHoverRadius: 6,
         segment: {
           borderColor: ctx => {
             const { p0, p1 } = ctx;
-            return p1.raw > p0.raw ? 'rgba(34, 197, 94, 1)' : 'rgba(239, 68, 68, 1)'; // Green for increase, red for decrease
+            return p1.raw > p0.raw ? 'rgba(34, 197, 94, 1)' : 'rgba(239, 68, 68, 1)';
           },
         },
       },
@@ -62,14 +67,28 @@ const MoneyFlowChart = () => {
 
   const options = {
     responsive: true,
+    maintainAspectRatio: false,
     plugins: {
       legend: {
         display: true,
         position: 'top',
+        labels: {
+          color: 'white',
+          font: {
+            size: 14,
+            weight: 'bold'
+          }
+        }
       },
       tooltip: {
-        enabled: true, // Ensure tooltips are enabled
-        intersect: false, // Show tooltip when hovering over the line segment
+        enabled: true,
+        intersect: false,
+        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+        titleColor: '#1f2937',
+        bodyColor: '#1f2937',
+        borderColor: '#e5e7eb',
+        borderWidth: 1,
+        padding: 12,
         callbacks: {
           label: context => {
             const income = context.raw;
@@ -83,39 +102,52 @@ const MoneyFlowChart = () => {
         grid: {
           display: false,
         },
+        ticks: {
+          color: 'white',
+          font: {
+            size: 12,
+            weight: 'bold'
+          }
+        }
       },
       y: {
-        min: 0, // Start the y-axis at 0
+        min: 0,
         suggestedMax: (() => {
           const maxIncome = Math.max(...monthlyIncome.filter(i => i !== null), 0);
-          return Math.ceil(Math.max(400000, maxIncome) / 20000) * 20000; // Round up to the nearest 20,000
+          return Math.ceil(Math.max(400000, maxIncome) / 20000) * 20000;
         })(),
         grid: {
-          color: 'rgba(255, 255, 255, 0.2)',
+          color: 'rgba(255, 255, 255, 0.1)',
         },
         ticks: {
           color: 'white',
-          stepSize: 20000, // Fixed step size of 20,000
-          callback: value => (value === 0 ? '0' : `${value / 1000}K`), // Format ticks as "0", "20K", "40K", etc.
+          font: {
+            size: 12,
+            weight: 'bold'
+          },
+          stepSize: 20000,
+          callback: value => (value === 0 ? '0' : `${value / 1000}K`),
         },
       },
     },
   };
 
   return (
-    <div className="hidden lg:flex justify-center items-center h-full"> {/* Show only on laptop and larger screens */}
-      <div className="bg-transparent rounded-3xl p-6 text-white shadow-lg outline-3 outline-white h-full w-full max-w-5xl">
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-red-400">Money Flow</h2>
-          <div className="flex space-x-2">
-            <Button variant="primary">Money Flow</Button>
-          </div>
+    <div className="hidden lg:block h-full">
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-8 shadow-xl h-full w-full">
+        <div className="flex justify-between items-center mb-8">
+          <h2 className="text-3xl font-bold bg-gradient-to-r from-red-400 to-red-600 bg-clip-text text-transparent">
+            Money Flow
+          </h2>
+          <Button variant="primary" className="px-6 py-2 text-sm">Money Flow</Button>
         </div>
-        <div className="h-full">
+        <div className="h-[calc(100%-5rem)]">
           {monthlyIncome.some(income => income !== null) ? (
             <Line data={data} options={options} />
           ) : (
-            <p className="text-center text-white">No data available for the selected months.</p>
+            <div className="flex items-center justify-center h-full">
+              <p className="text-lg text-gray-300">No data available for the selected months.</p>
+            </div>
           )}
         </div>
       </div>

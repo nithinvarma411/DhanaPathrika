@@ -387,68 +387,144 @@ function StockMaintainance() {
             </div>
 
             {isGroupCreationView && (
-              <div className="flex justify-center mb-4">
-                <input
-                  type="text"
-                  placeholder="Group Name"
-                  className="px-4 py-2 border rounded-md m-2"
-                  value={newGroupName}
-                  onChange={(e) => setNewGroupName(e.target.value)}
-                />
-                <button
-                  onClick={handleCreateGroup}
-                  className="px-4 py-2 bg-green-500 text-white rounded-md hover:bg-green-600 m-2"
-                >
-                  Create Group
-                </button>
-                <button
-                  onClick={handleCancelGroupCreation}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 m-2"
-                >
-                  Cancel
-                </button>
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 mb-6 shadow-md">
+                <div className="flex flex-col md:flex-row justify-center items-center gap-4">
+                  <div className="relative w-full md:w-1/3">
+                    <input
+                      type="text"
+                      placeholder="Enter Group Name"
+                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                      value={newGroupName}
+                      onChange={(e) => setNewGroupName(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex gap-3">
+                    <button
+                      onClick={handleCreateGroup}
+                      className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Create Group
+                    </button>
+                    <button
+                      onClick={handleCancelGroupCreation}
+                      className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-lg hover:from-gray-600 hover:to-gray-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        className="h-5 w-5"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      Cancel
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
-            <div className="flex overflow-x-auto scrollbar-hide gap-2 mb-4">
+            <div className="flex overflow-x-auto scrollbar-hide gap-3 mb-6 py-2">
               {groups.map((group, index) => (
                 <button
                   key={index}
                   onClick={() => handleGroupClick(group)}
-                  className={`px-4 py-2 rounded-md ${
-                    isGroupView && filteredItems[0]?.Group === group
-                      ? "bg-green-500 text-white hover:bg-green-600"
-                      : "bg-white text-black hover:bg-gray-200 border border-black"
-                  }`}
+                  className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 whitespace-nowrap
+        ${isGroupView && filteredItems[0]?.Group === group
+          ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
+          : "bg-white text-gray-700 border-2 border-gray-200 hover:border-red-500 hover:text-red-500"
+        }`}
                 >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                  </svg>
                   {group}
                 </button>
               ))}
             </div>
 
             {isGroupView && (
-              <div className="flex justify-center gap-4 mb-4">
-                <button
-                  onClick={() => {
-                    setFilteredItems(items); // Reset to show all items
-                    setIsGroupView(false);
-                  }}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
-                >
-                  Show All Items
-                </button>
-                <button
-                  onClick={handleAddItemButtonClick}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
-                >
-                  Add Item
-                </button>
-                <button
-                  onClick={() => handleDeleteGroup(filteredItems[0]?.Group)}
-                  className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-700"
-                >
-                  Delete Group
-                </button>
+              <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-4 mb-6 shadow-md">
+                <div className="flex flex-wrap justify-center gap-4">
+                  <button
+                    onClick={() => {
+                      setFilteredItems(items);
+                      setIsGroupView(false);
+                    }}
+                    className="px-6 py-3 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-lg hover:from-blue-600 hover:to-blue-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm.707-10.293a1 1 0 00-1.414-1.414l-3 3a1 1 0 000 1.414l3 3a1 1 0 001.414-1.414L9.414 11H13a1 1 0 100-2H9.414l1.293-1.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Show All Items
+                  </button>
+                  <button
+                    onClick={handleAddItemButtonClick}
+                    className="px-6 py-3 bg-gradient-to-r from-green-500 to-green-600 text-white rounded-lg hover:from-green-600 hover:to-green-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v2H7a1 1 0 100 2h2v2a1 1 0 102 0v-2h2a1 1 0 100-2h-2V7z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Add Item
+                  </button>
+                  <button
+                    onClick={() => handleDeleteGroup(filteredItems[0]?.Group)}
+                    className="px-6 py-3 bg-gradient-to-r from-red-500 to-red-600 text-white rounded-lg hover:from-red-600 hover:to-red-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center gap-2"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    Delete Group
+                  </button>
+                </div>
               </div>
             )}
 

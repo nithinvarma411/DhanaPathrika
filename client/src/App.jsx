@@ -18,25 +18,84 @@ import SendMessage from './pages/SendMessage';
 import Notification from './pages/Notification';
 import PasswordRecovery from './pages/PasswordRecovery';
 
+import ProtectedRoute from './components/ProtectedRoute';
+
 function App() {
 
   return (
     <BrowserRouter basename="/">
       <Routes>
         <Route path='/' element={<Signup />} />
-        <Route path='/login' element={<Login/>}/>
-        <Route path='/details' element={<CompanyForm/>}/>
-        <Route path='/home' element={<Home/>}/>
-        <Route path='/profile' element={<Dashboard/>} />
-        <Route path='/Bills' element={<BillingPage/>} />
-        <Route path='/invoice-generator' element={<InvoiceGenerator/>} />
-        <Route path='/invoice' element={<InvoicePage/>} />
-        <Route path='/stock-maintenance' element={<StockMaintainance/>} />
-        <Route path='/notification' element={<Notification/>} />
-        <Route path='/add-stock' element={<AddStock/>} />
-        {/* <Route path='/join' element={<JoinSandbox/>} />
-        <Route path='/send' element={<SendMessage/>} /> */}
-        <Route path='/password-recovery' element={<PasswordRecovery/>} />
+        <Route path='/login' element={<Login />} />
+        <Route path='/details' element={<CompanyForm />} />
+
+        {/* Protected Routes */}
+        <Route
+          path='/home'
+          element={
+            <ProtectedRoute>
+              <Home />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/profile'
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/Bills'
+          element={
+            <ProtectedRoute>
+              <BillingPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/invoice-generator'
+          element={
+            <ProtectedRoute>
+              <InvoiceGenerator />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/invoice'
+          element={
+            <ProtectedRoute>
+              <InvoicePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/stock-maintenance'
+          element={
+            <ProtectedRoute>
+              <StockMaintainance />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/notification'
+          element={
+            <ProtectedRoute>
+              <Notification />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path='/add-stock'
+          element={
+            <ProtectedRoute>
+              <AddStock />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route path='/password-recovery' element={<PasswordRecovery />} />
         <Route path='*' element={<NotFound />} />
       </Routes>
       <ToastContainer position="top-right" autoClose={1000} />

@@ -8,6 +8,7 @@ import bgImage from "../assets/bg.jpg";
 import { ClipLoader } from "react-spinners";
 import { toast } from "react-toastify";
 import Chatbot from "../components/Chatbot";
+import { motion } from "framer-motion";
 
 const Home = () => {
   const [invoices, setInvoices] = useState([]);
@@ -43,27 +44,45 @@ const Home = () => {
 
   return (
     <div
-      className="relative z-0 min-h-screen w-screen text-white bg-cover bg-center bg-no-repeat overflow-x-hidden"
+      className="relative z-0 min-h-screen w-screen text-white bg-cover bg-center bg-no-repeat overflow-x-hidden bg-fixed"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
-      <div className="min-h-screen bg-red-950/70 relative z-0">
+      <div className="min-h-screen bg-gradient-to-br from-red-950/80 to-red-900/60 backdrop-blur-sm relative z-0">
         <Header />
         {loading ? (
-          <div className="flex justify-center items-center h-screen">
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex justify-center items-center h-screen"
+          >
             <ClipLoader color="white" size={100} />
-          </div>
+          </motion.div>
         ) : (
-          <>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+          >
             <StatsSummary invoices={invoices} />
             <div className="flex flex-wrap mt-8 px-4 gap-4">
-              <div className="flex-1 min-w-80">
+              <motion.div 
+                className="flex-1 min-w-80"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+              >
                 <InvoiceChart invoices={invoices} />
-              </div>
-              <div className="flex-1 min-w-80">
+              </motion.div>
+              <motion.div 
+                className="flex-1 min-w-80"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+              >
                 <RecentActivity invoices={invoices} />
-              </div>
+              </motion.div>
             </div>
-          </>
+          </motion.div>
         )}
       </div>
       <Chatbot/>

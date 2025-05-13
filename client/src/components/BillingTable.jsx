@@ -127,9 +127,31 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   };
 
   const handleDelete = async (invoiceId) => {
+    // First get password
+    const { value: password } = await Swal.fire({
+      title: "Enter your password to confirm deletion",
+      input: "password",
+      inputPlaceholder: "Enter your password",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#6e7881",
+      confirmButtonText: "Next",
+      customClass: {
+        popup: "custom-swal",
+      },
+      inputValidator: (value) => {
+        if (!value) {
+          return "Password is required";
+        }
+      },
+    });
+
+    if (!password) return;
+
+    // Second confirmation after password
     const result = await Swal.fire({
-      title: "Are you sure?",
-      text: "You won't be able to revert this!",
+      title: "Are you absolutely sure?",
+      text: "This action cannot be undone!",
       icon: "warning",
       showCancelButton: true,
       confirmButtonColor: "#d33",
@@ -145,7 +167,10 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     try {
       await axios.delete(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/deleteInvoice/${invoiceId}`,
-        { withCredentials: true }
+        { 
+          data: { Password: password },
+          withCredentials: true 
+        }
       );
 
       setBillingData(billingData.filter(invoice => invoice._id !== invoiceId));
@@ -163,7 +188,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
       console.error("Error deleting invoice:", error);
       Swal.fire({
         title: "Error!",
-        text: "Failed to delete invoice.",
+        text: error.response?.data?.message || "Failed to delete invoice.",
         icon: "error",
         confirmButtonColor: "#d33",
         customClass: {

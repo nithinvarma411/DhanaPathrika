@@ -1,6 +1,8 @@
 import { Invoice } from "../models/Invoice.model.js";
 import { Stock } from "../models/stock.model.js";
+import { User } from "../models/user.model.js";
 import mongoose from 'mongoose';
+import bcrypt from 'bcrypt';
 import nodemailer from "nodemailer";
 
 const createInvoice = async (req, res) => {
@@ -169,6 +171,8 @@ const updateInvoice = async (req, res) => {
 
 const deleteInvoice = async (req, res) => {
     try {
+        const {Password} = req.body;
+        
         let { id } = req.params;
         id = id.replace(":", "");
 
@@ -179,6 +183,12 @@ const deleteInvoice = async (req, res) => {
             return res.status(400).send({ "message": "Invalid invoice ID" });
         }
         const userId = req.user.id;
+        const user = await User.findById(userId);
+        const isPasswordValid = await bcrypt.compare(Password, user.Password)
+
+        if (!isPasswordValid) {
+            return res.status(401).send({ "message": "Invalid Password" }); 
+        }
         const invoice = await Invoice.findById(id);
         if (!invoice || invoice.user.toString() !== userId) {
             return res.status(404).send({ "message": "Invoice not found or unauthorized" });

@@ -117,7 +117,7 @@ const register = async (req, res) => {
 
         // Set the token as a cookie in the response
         res.cookie('token', token, {
-            httpOnly: process.env.NODE_ENV === 'production',
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000  // 7 days
@@ -160,7 +160,7 @@ const login = async (req, res) => {
         // console.log("token", token);
 
         res.cookie('token', token, {
-            httpOnly: process.env.NODE_ENV === 'production',
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
             maxAge: 7 * 24 * 60 * 60 * 1000
@@ -221,7 +221,7 @@ const logout = (req, res) => {
         }
 
         res.clearCookie('token', {
-            httpOnly: process.env.NODE_ENV === 'production',
+            httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
         });
@@ -273,7 +273,7 @@ const faceLogin = async (req, res) => {
                 const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '10d' });
 
                 res.cookie('token', token, {
-                    httpOnly: process.env.NODE_ENV === 'production',
+                    httpOnly: true,
                     secure: process.env.NODE_ENV === 'production',
                     sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
                     maxAge: 7 * 24 * 60 * 60 * 1000

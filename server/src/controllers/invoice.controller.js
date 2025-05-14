@@ -90,79 +90,155 @@ const updateInvoice = async (req, res) => {
     try {
         let { id } = req.params;
         id = id.replace(":", "");
-
-        // console.log(id);
         
-                
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).send({ "message": "Invalid invoice ID" });
         }
         const userId = req.user.id;
-        // console.log(userId);
         
-        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue, Discount } = req.body;
+        const { 
+            CustomerName, 
+            CustomerEmail, 
+            Items, 
+            AmountPaid, 
+            DueDate, 
+            Date: invoiceDate, // Rename Date to invoiceDate to avoid conflict
+            PaymentMethod, 
+            IsDue, 
+            Discount, 
+            _deletedItems 
+        } = req.body;
 
-        // console.log(CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue);
-        
-
-        if (!CustomerName || !CustomerEmail || !AmountPaid || !Date || !PaymentMethod || Items.length === 0) {
+        if (!CustomerName || !CustomerEmail || !AmountPaid || !invoiceDate || !PaymentMethod || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
         }
 
-        if (AmountPaid < 0 || Discount < 0) {
-            return res.status(400).send({ "message": "Amount and Discount cannot be less than 0" });
-        }
-
-        const invoice = await Invoice.findById(id);
-        // console.log(invoice);
-        
-        if (!invoice || invoice.user.toString() !== userId) {
+        const oldInvoice = await Invoice.findById(id);
+        if (!oldInvoice || oldInvoice.user.toString() !== userId) {
             return res.status(404).send({ "message": "Invoice not found or unauthorized" });
         }
 
-        // Compare old and new items
-        const oldItemsMap = new Map(invoice.Items.map(item => [item.Name, item.Quantity]));
-        const newItemsMap = new Map(Items.map(item => [item.Name, item.Quantity]));
-
-        // Restore stock for removed or changed items
-        for (const [itemName, oldQty] of oldItemsMap.entries()) {
-            const newQty = newItemsMap.get(itemName);
-            if (newQty === undefined || newQty !== oldQty) {
-                await Stock.findOneAndUpdate(
-                    { ItemName: itemName, user: userId },
-                    { $inc: { AvailableQuantity: oldQty } }
-                );
+        // First, restore stock quantities for deleted items
+        if (_deletedItems?.length > 0) {
+            for (const deletedItem of _deletedItems) {
+                const stockItem = await Stock.findOne({ ItemName: deletedItem.Name, user: userId });
+                if (stockItem) {
+                    stockItem.AvailableQuantity += deletedItem.Quantity;
+                    await stockItem.save();
+                }
             }
         }
 
-        // Validate and update stock for new or modified items
-        for (const [itemName, newQty] of newItemsMap.entries()) {
-            const oldQty = oldItemsMap.get(itemName);
-            if (oldQty === undefined || newQty !== oldQty) {
+        // Handle stock updates for remaining and modified items
+        const stockUpdates = [];
+        
+        // Create maps for easier comparison
+        const oldItemsMap = new Map(oldInvoice.Items.map(item => [item.Name, item]));
+        const newItemsMap = new Map(Items.map(item => [item.Name, item]));
+
+        // Handle items that were in old invoice but not in new one (removed items)
+        for (const [itemName, oldItem] of oldItemsMap) {
+            if (!newItemsMap.has(itemName)) {
                 const stockItem = await Stock.findOne({ ItemName: itemName, user: userId });
-
-                if (!stockItem) {
-                    return res.status(404).send({ "message": `Stock item '${itemName}' not found` });
+                if (stockItem) {
+                    stockItem.AvailableQuantity += oldItem.Quantity; // Return stock
+                    await stockItem.save();
+                    stockUpdates.push({
+                        item: itemName,
+                        change: oldItem.Quantity,
+                        type: 'removed'
+                    });
                 }
-
-                if (stockItem.AvailableQuantity < newQty) {
-                    return res.status(400).send({ "message": `Not enough stock for '${itemName}'` });
-                }
-
-                await Stock.findOneAndUpdate(
-                    { ItemName: itemName, user: userId },
-                    { $inc: { AvailableQuantity: -newQty } }
-                );
             }
+        }
+
+        // Handle new and modified items
+        for (const [itemName, newItem] of newItemsMap) {
+            const oldItem = oldItemsMap.get(itemName);
+            const stockItem = await Stock.findOne({ ItemName: itemName, user: userId });
+            
+            if (!stockItem) {
+                return res.status(404).send({ "message": `Stock item '${itemName}' not found` });
+            }
+
+            let quantityDiff = 0;
+            if (!oldItem) {
+                // New item added to invoice
+                quantityDiff = newItem.Quantity;
+            } else {
+                // Existing item with possibly modified quantity
+                quantityDiff = newItem.Quantity - oldItem.Quantity;
+            }
+
+            if (quantityDiff > 0 && stockItem.AvailableQuantity < quantityDiff) {
+                return res.status(400).send({
+                    "message": `Not enough stock for '${itemName}'`,
+                    "available": stockItem.AvailableQuantity,
+                    "required": quantityDiff
+                });
+            }
+
+            stockItem.AvailableQuantity -= quantityDiff;
+            await stockItem.save();
+            
+            stockUpdates.push({
+                item: itemName,
+                change: -quantityDiff,
+                type: oldItem ? 'modified' : 'added'
+            });
+        }
+
+        // Calculate total amount after all item changes
+        const totalAmount = Items.reduce((sum, item) => sum + (item.Quantity * item.AmountPerItem), 0);
+        
+        // Calculate final balance after discount
+        const balanceAfterDiscount = totalAmount - AmountPaid - (Discount || 0);
+        
+        // Determine IsDue status based on balance
+        const newIsDue = balanceAfterDiscount > 0;
+
+        // If there's a new balance but no due date, require one
+        if (newIsDue && !DueDate) {
+            return res.status(400).send({ 
+                "message": "Due Date is required when there is a remaining balance" 
+            });
         }
 
         const updatedInvoice = await Invoice.findByIdAndUpdate(
             id,
-            { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue, Discount },
+            { 
+                CustomerName, 
+                CustomerEmail, 
+                Items, 
+                AmountPaid, 
+                DueDate: newIsDue ? DueDate : null, // Clear due date if fully paid
+                Date: invoiceDate, // Use renamed variable
+                PaymentMethod, 
+                IsDue: newIsDue, // Set based on calculation
+                Discount,
+                lastModified: new Date(),
+                modificationHistory: [
+                    ...(oldInvoice.modificationHistory || []),
+                    {
+                        timestamp: new Date(),
+                        userId: userId,
+                        stockUpdates,
+                        balanceChange: {
+                            oldBalance: oldInvoice.AmountPaid - oldInvoice.Discount,
+                            newBalance: AmountPaid - Discount,
+                            totalAmount
+                        }
+                    }
+                ]
+            },
             { new: true }
         );
 
-        return res.status(200).send({ "message": "Invoice updated successfully", invoice: updatedInvoice });
+        return res.status(200).send({ 
+            "message": "Invoice updated successfully", 
+            invoice: updatedInvoice,
+            stockUpdates
+        });
     } catch (error) {
         console.error("Error updating invoice", error);
         return res.status(500).send({ "message": "Internal Server Error" });

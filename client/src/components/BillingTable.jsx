@@ -17,6 +17,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   const profileShown = useRef(false);
   const invoiceRef = useRef(null);
   const [monthFilter, setMonthFilter] = useState("This Month");
+  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!profileShown.current) {
@@ -211,6 +212,45 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
           console.error("Error downloading invoice:", error);
           toast.error("Failed to download image");
         });
+    }
+  };
+
+  const handleUpdate = async (updatedInvoice) => {
+    try {
+      const response = await axios.put(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/updateInvoice/${updatedInvoice._id}`,
+        updatedInvoice,
+        { withCredentials: true }
+      );
+
+      // Update the local state with the updated invoice
+      setBillingData(billingData.map(invoice => 
+        invoice._id === updatedInvoice._id ? response.data.invoice : invoice
+      ));
+
+      setShowInvoiceModal(false);
+      setIsEditing(false);
+
+      Swal.fire({
+        title: "Success!",
+        text: "Invoice updated successfully.",
+        icon: "success",
+        confirmButtonColor: "#3085d6",
+        customClass: {
+          popup: "custom-swal",
+        },
+      });
+    } catch (error) {
+      console.error("Error updating invoice:", error);
+      Swal.fire({
+        title: "Error!",
+        text: error.response?.data?.message || "Failed to update invoice.",
+        icon: "error",
+        confirmButtonColor: "#d33",
+        customClass: {
+          popup: "custom-swal",
+        },
+      });
     }
   };
 
@@ -425,6 +465,17 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                           >
                             Delete
                           </button>
+                          <button
+                            className="px-4 py-2 rounded-md text-sm font-medium bg-blue-500 text-white hover:bg-blue-600 shadow-sm hover:shadow transition-all duration-200"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsEditing(true);
+                              setSelectedInvoice(row);
+                              setShowInvoiceModal(true);
+                            }}
+                          >
+                            Update
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -446,20 +497,30 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
           <div className="bg-white p-6 rounded shadow-lg w-[90%] max-w-4xl relative my-8 max-h-[90vh] overflow-y-auto scrollbar-hide">
             <button
               className="absolute top-2 right-3 text-gray-500 hover:text-black text-3xl"
-              onClick={() => setShowInvoiceModal(false)}
+              onClick={() => {
+                setShowInvoiceModal(false);
+                setIsEditing(false);
+              }}
             >
               &times;
             </button>
             <div ref={invoiceRef}>
-              <Invoice invoice={selectedInvoice} profile={profile} />
+              <Invoice 
+                invoice={selectedInvoice} 
+                profile={profile} 
+                isEditing={isEditing}
+                onUpdate={handleUpdate}
+              />
             </div>
-            <div className="flex justify-center mt-4">
-              <button
-                className="px-4 py-2 bg-red-400 text-white rounded hover:bg-red-600"
-                onClick={handleDownload}
-              >
-                Download
-              </button>
+            <div className="flex justify-center mt-4 gap-4">
+              {!isEditing && (
+                <button
+                  className="px-4 py-2 bg-red-400 text-white rounded hover:bg-red-600"
+                  onClick={handleDownload}
+                >
+                  Download
+                </button>
+              )}
             </div>
           </div>
         </div>

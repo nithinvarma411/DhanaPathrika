@@ -55,86 +55,122 @@ export default function CompanyForm() {
   
 
   return (
-    <div
-      className="h-screen flex flex-col items-center justify-center bg-cover bg-center p-4"
-      style={{ backgroundImage: `url(${bg})` }}
-    >
-      <motion.div className="flex items-center mb-10" initial={{ x: -100 }} animate={{ x: 0 }} transition={{ duration: 0.5 }}>
-        <img src={logo} alt="logo" className="w-12 h-12 mr-3" />
-        <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-300 to-pink-300">Dhana Pathrika</h1>
+    <div className="min-h-screen flex flex-col items-center justify-center bg-cover bg-center p-4 relative"
+      style={{ backgroundImage: `url(${bg})` }}>
+      {/* Gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black/50 to-transparent pointer-events-none" />
+
+      <motion.div 
+        className="flex items-center mb-10 relative z-10" 
+        initial={{ x: -100 }} 
+        animate={{ x: 0 }} 
+        transition={{ duration: 0.5 }}
+      >
+        <img src={logo} alt="logo" className="w-16 h-16 mr-4 rounded-full shadow-lg" />
+        <h1 className="text-5xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-yellow-300 via-red-400 to-pink-400 drop-shadow-lg">
+          Dhana Pathrika
+        </h1>
       </motion.div>
 
       <motion.div
-        className="bg-white p-8 rounded-2xl shadow-2xl w-[600px]"
+        className="bg-white/95 backdrop-blur-sm p-10 rounded-3xl shadow-2xl w-[650px] relative z-10"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.5 }}
       >
-        <h2 className="text-red-600 font-semibold text-lg mb-6 text-center">
-          Tell Us Something about you and your company :
+        <h2 className="text-2xl font-bold text-gray-800 mb-8 text-center">
+          Tell Us About Your Company
         </h2>
 
-        <motion.div className="flex flex-col items-center mb-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1 }}>
-          <div className="w-16 h-16 bg-gray-200 rounded-full flex items-center justify-center overflow-hidden">
+        <motion.div 
+          className="flex flex-col items-center mb-8" 
+          initial={{ opacity: 0 }} 
+          animate={{ opacity: 1 }} 
+          transition={{ duration: 1 }}
+        >
+          <div className="w-24 h-24 bg-gradient-to-br from-red-100 to-red-50 rounded-full flex items-center justify-center overflow-hidden shadow-lg border-2 border-red-200">
             {preview ? (
               <img src={preview} alt="Preview" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-3xl">👤</span>
+              <span className="text-4xl">🏢</span>
             )}
           </div>
-          <p className="mt-2">Your Company Logo</p>
-          <label className="mt-2 bg-red-600 text-white px-4 py-2 rounded cursor-pointer hover:bg-red-700">
-            Choose File
+          <p className="mt-3 text-gray-600 font-medium">Company Logo</p>
+          <label className="mt-3 bg-gradient-to-r from-red-600 to-red-500 text-white px-6 py-2 rounded-full cursor-pointer hover:from-red-700 hover:to-red-600 transition-all duration-300 shadow-md">
+            Upload Logo
             <input type="file" accept="image/*" className="hidden" onChange={handleFileChange} />
           </label>
         </motion.div>
 
-        <motion.form onSubmit={handleSubmit} className="grid grid-cols-2 gap-4" initial={{ y: 50, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ duration: 0.5 }}>
-          <input
-            type="text"
-            name="CompanyName"
-            placeholder="Company Name"
-            className="border p-2 rounded-md w-full"
-            value={formData.CompanyName}
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="UserName"
-            placeholder="UserName"
-            className="border p-2 rounded-md w-full"
-            value={formData.UserName}
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="BussinessAdress"
-            placeholder="Company Address"
-            className="border p-2 rounded-md w-full col-span-2"
-            value={formData.BussinessAdress}
-            onChange={handleChange}
-          />
-          <input
-            type="text"
-            name="Pincode"
-            placeholder="Pin Code"
-            className="border p-2 rounded-md w-full"
-            value={formData.Pincode}
-            onChange={handleChange}
-          />
-          <div className="flex justify-end col-span-2">
+        <motion.form 
+          onSubmit={handleSubmit} 
+          className="space-y-6"
+          initial={{ y: 50, opacity: 0 }} 
+          animate={{ y: 0, opacity: 1 }} 
+          transition={{ duration: 0.5 }}
+        >
+          <div className="grid grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Company Name</label>
+              <input
+                type="text"
+                name="CompanyName"
+                placeholder="Enter company name"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
+                value={formData.CompanyName}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-gray-700">Username</label>
+              <input
+                type="text"
+                name="UserName"
+                placeholder="Enter username"
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
+                value={formData.UserName}
+                onChange={handleChange}
+              />
+            </div>
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Business Address</label>
+            <input
+              type="text"
+              name="BussinessAdress"
+              placeholder="Enter business address"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
+              value={formData.BussinessAdress}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-gray-700">Pin Code</label>
+            <input
+              type="text"
+              name="Pincode"
+              placeholder="Enter pin code"
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all duration-300"
+              value={formData.Pincode}
+              onChange={handleChange}
+            />
+          </div>
+
+          <div className="flex justify-end pt-4">
             <motion.button 
               type="submit"
-              className="bg-red-600 text-white px-6 py-2 rounded-full shadow-lg hover:bg-red-700"
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
+              className="bg-gradient-to-r from-red-600 to-red-500 text-white px-8 py-3 rounded-full shadow-lg hover:from-red-700 hover:to-red-600 transition-all duration-300"
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
             >
-              Submit
+              Submit Details
             </motion.button>
           </div>
         </motion.form>
       </motion.div>
-      <Chatbot/>
+      <Chatbot />
     </div>
   );
 }

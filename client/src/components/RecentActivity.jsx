@@ -25,7 +25,7 @@ const RecentActivity = ({ invoices }) => {
 
       return {
         avatar: invoice.CustomerName.charAt(0),
-        title: `Invoice #${invoice._id} ${invoice.AmountPaid ? "Paid" : "Created"}`,
+        title: `Invoice #${invoice.InvoiceID || invoice._id} ${invoice.AmountPaid ? "Paid" : "Created"}`,
         description: invoice.AmountPaid
           ? `${invoice.CustomerName} paid their invoice`
           : `New invoice for ${invoice.CustomerName}`,

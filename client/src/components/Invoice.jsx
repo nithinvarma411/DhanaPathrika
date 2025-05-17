@@ -97,6 +97,10 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate }) => {
     }
   };
 
+  const handleItemNameClick = () => {
+    toast.info("Item name cannot be modified. Please remove the item and add a new one if needed.");
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     onUpdate(editableInvoice);
@@ -166,7 +170,7 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate }) => {
   }
 
   if (isEditing) {
-    const { totalAmount, dueAmount } = calculateTotals(editableInvoice.Items);
+    const { totalAmount, dueAmount } = calculateTotals(editableInvoice.Items);    
 
     return (
       <form onSubmit={handleSubmit} className="p-4 space-y-6 bg-white rounded-lg">
@@ -253,9 +257,9 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate }) => {
                       type="text"
                       name={`item-Name-${index}`}
                       value={item.Name}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                      required
+                      onClick={handleItemNameClick}
+                      className="mt-1 block w-full rounded-md border-gray-300 bg-gray-100 cursor-not-allowed shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                      readOnly
                     />
                   </div>
                   <div>
@@ -350,7 +354,7 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate }) => {
             </h1>
           </div>
           <div className="text-center sm:text-right">
-            <p className="font-medium text-sm sm:text-base">Invoice No. - {invoice._id || "N/A"}</p>
+            <p className="font-medium text-sm sm:text-base">Invoice No. - {invoice.InvoiceID || invoice._id}</p>
           </div>
         </div>
 
@@ -381,7 +385,7 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate }) => {
           <div className="grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-gray-300">
             <div className="p-4">
               <h2 className="font-bold mb-2">Billed To</h2>
-              <p className="font-bold">{invoice.CustomerName || "N/A"}</p>
+              <p className="font-bold break-words">{invoice.CustomerName || "N/A"}</p>
               <p className="text-sm md:text-base break-words">{invoice.CustomerEmail || "N/A"}</p>
             </div>
 

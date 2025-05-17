@@ -191,6 +191,10 @@ const ProfileSection = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  const handleReadOnlyClick = () => {
+    toast.info("Please contact the developer to change this field.");
+  };
+
   return (
     <div className="bg-gradient-to-br from-white to-gray-50 rounded-3xl p-8 shadow-lg h-screen overflow-y-auto">
       <h2 className="text-3xl font-bold bg-gradient-to-r from-red-500 to-red-700 bg-clip-text text-transparent mb-8">Profile</h2>
@@ -248,9 +252,10 @@ const ProfileSection = () => {
                 <input
                   type="text"
                   name="MobileNumber"
-                  className="w-full border border-gray-200 rounded-r-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                  className="w-full border border-gray-200 rounded-r-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition cursor-not-allowed"
                   value={formData.MobileNumber}
                   readOnly
+                  onClick={handleReadOnlyClick}
                 />
               </div>
             </div>
@@ -259,9 +264,10 @@ const ProfileSection = () => {
               <input
                 type="email"
                 name="Email"
-                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
+                className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition cursor-not-allowed"
                 value={formData.Email}
                 readOnly
+                onClick={handleReadOnlyClick}
               />
             </div>
           </div>

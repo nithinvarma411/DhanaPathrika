@@ -12,6 +12,15 @@ const InvoiceGenerator = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [units, setUnits] = useState({}); // Store units for each item
+  const [errors, setErrors] = useState({
+    items: [{ itemName: "", amountPerItem: "", quantity: "" }],
+    customerName: "",
+    customerEmail: "",
+    amountPaid: "",
+    discount: "",
+    dueDate: "",
+    paymentMethod: ""
+  });
 
   const [formData, setFormData] = useState({
     customerName: "",
@@ -23,8 +32,70 @@ const InvoiceGenerator = () => {
     items: [{ itemName: "", amountPerItem: "", quantity: "" }],
   });
 
+  const validateField = (name, value, index = null) => {
+    if (index !== null) {
+      const itemErrors = [...errors.items];
+      
+      switch (name) {
+        case 'itemName':
+          itemErrors[index].itemName = value.trim() ? '' : 'Item name is required';
+          break;
+        case 'amountPerItem':
+          if (!value) {
+            itemErrors[index].amountPerItem = 'Amount is required';
+          } else if (Number(value) <= 0) {
+            itemErrors[index].amountPerItem = 'Amount must be greater than 0';
+          } else {
+            itemErrors[index].amountPerItem = '';
+          }
+          break;
+        case 'quantity':
+          if (!value) {
+            itemErrors[index].quantity = 'Quantity is required';
+          } else if (Number(value) <= 0) {
+            itemErrors[index].quantity = 'Quantity must be greater than 0';
+          } else {
+            itemErrors[index].quantity = '';
+          }
+          break;
+      }
+      setErrors(prev => ({...prev, items: itemErrors}));
+    } else {
+      switch (name) {
+        case 'customerName':
+          setErrors(prev => ({...prev, customerName: value.trim() ? '' : 'Customer name is required'}));
+          break;
+        case 'customerEmail':
+          if (!value.trim()) {
+            setErrors(prev => ({...prev, customerEmail: 'Email is required'}));
+          } else if (!/\S+@\S+\.\S+/.test(value)) {
+            setErrors(prev => ({...prev, customerEmail: 'Invalid email format'}));
+          } else {
+            setErrors(prev => ({...prev, customerEmail: ''}));
+          }
+          break;
+        case 'amountPaid':
+          if (!value) {
+            setErrors(prev => ({...prev, amountPaid: 'Amount paid is required'}));
+          } else if (Number(value) < 0) {
+            setErrors(prev => ({...prev, amountPaid: 'Amount cannot be negative'}));
+          } else {
+            setErrors(prev => ({...prev, amountPaid: ''}));
+          }
+          break;
+        case 'discount':
+          setErrors(prev => ({
+            ...prev,
+            discount: Number(value) < 0 ? 'Discount cannot be negative' : ''
+          }));
+          break;
+      }
+    }
+  };
+
   const handleChange = async (e, index = null) => {
     const { name, value } = e.target;
+    validateField(name, value, index);
 
     if (index !== null) {
       const updatedItems = [...formData.items];
@@ -198,11 +269,14 @@ const InvoiceGenerator = () => {
                         handleChange(e, index);
                         fetchSuggestions(e.target.value, index);
                       }}
-                      className="border rounded px-3 py-2 w-full"
+                      className={`border rounded px-3 py-2 w-full ${errors.items[index]?.itemName ? 'border-red-500' : ''}`}
                       required
                       autoComplete="off"
                       style={{ fontFamily: 'Arial, sans-serif' }}
                     />
+                    {errors.items[index]?.itemName && (
+                      <p className="text-red-500 text-xs mt-1">{errors.items[index].itemName}</p>
+                    )}
                     {suggestions[index]?.length > 0 && (
                       <div className="absolute bg-white border border-gray-300 w-full mt-1 z-10 max-h-40 overflow-y-auto scrollbar-hide rounded shadow">
                         {suggestions[index].map((suggestion, i) => (
@@ -263,9 +337,12 @@ const InvoiceGenerator = () => {
                       name="amountPerItem"
                       value={item.amountPerItem}
                       onChange={(e) => handleChange(e, index)}
-                      className="border rounded px-3 py-2 w-full"
+                      className={`border rounded px-3 py-2 w-full ${errors.items[index]?.amountPerItem ? 'border-red-500' : ''}`}
                       required
                     />
+                    {errors.items[index]?.amountPerItem && (
+                      <p className="text-red-500 text-xs mt-1">{errors.items[index].amountPerItem}</p>
+                    )}
                   </div>
 
                   <div className="relative">
@@ -277,9 +354,12 @@ const InvoiceGenerator = () => {
                       name="quantity"
                       value={item.quantity}
                       onChange={(e) => handleChange(e, index)}
-                      className="border rounded px-3 py-2 w-full"
+                      className={`border rounded px-3 py-2 w-full ${errors.items[index]?.quantity ? 'border-red-500' : ''}`}
                       required
                     />
+                    {errors.items[index]?.quantity && (
+                      <p className="text-red-500 text-xs mt-1">{errors.items[index].quantity}</p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -310,14 +390,19 @@ const InvoiceGenerator = () => {
                   <label className="md:w-40 text-gray-700 mb-1 md:mb-0" style={{ fontFamily: 'Roboto, sans-serif' }}>
                     {label} :-
                   </label>
-                  <input
-                    type={type}
-                    name={name}
-                    value={formData[name]}
-                    onChange={handleChange}
-                    className="w-full md:w-[55%] border-b border-black outline-none px-2 py-1"
-                    style={{ fontFamily: 'Arial, sans-serif' }}
-                  />
+                  <div className="w-full md:w-[55%]">
+                    <input
+                      type={type}
+                      name={name}
+                      value={formData[name]}
+                      onChange={handleChange}
+                      className={`w-full border-b border-black outline-none px-2 py-1 ${errors[name] ? 'border-red-500' : ''}`}
+                      style={{ fontFamily: 'Arial, sans-serif' }}
+                    />
+                    {errors[name] && (
+                      <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

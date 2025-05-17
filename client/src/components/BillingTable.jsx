@@ -76,7 +76,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
     let updatedInvoice;
     const updatedBillingData = billingData.map((invoice) => {
-      if (invoice._id === invoiceId) {
+      if ((invoice.InvoiceID || invoice._id) === invoiceId) {
         const totalAmount = invoice.Items.reduce((sum, item) => {
           return sum + item.AmountPerItem * item.Quantity;
         }, 0);
@@ -174,7 +174,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         }
       );
 
-      setBillingData(billingData.filter(invoice => invoice._id !== invoiceId));
+      setBillingData(billingData.filter(invoice => (invoice.InvoiceID || invoice._id) !== invoiceId));
       
       Swal.fire({
         title: "Deleted!",
@@ -217,15 +217,16 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
   const handleUpdate = async (updatedInvoice) => {
     try {
+      const invoiceId = updatedInvoice._id;
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/updateInvoice/${updatedInvoice._id}`,
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/updateInvoice/${invoiceId}`,
         updatedInvoice,
         { withCredentials: true }
       );
 
       // Update the local state with the updated invoice
       setBillingData(billingData.map(invoice => 
-        invoice._id === updatedInvoice._id ? response.data.invoice : invoice
+        (invoice.InvoiceID || invoice._id) === invoiceId ? response.data.invoice : invoice
       ));
 
       setShowInvoiceModal(false);
@@ -240,6 +241,8 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
           popup: "custom-swal",
         },
       });
+
+      window.location.reload()
     } catch (error) {
       console.error("Error updating invoice:", error);
       Swal.fire({
@@ -296,7 +299,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     }
 
     const matchesSearch =
-      invoice._id.toLowerCase().includes(searchQuery) ||
+      (invoice.InvoiceID || invoice._id).toLowerCase().includes(searchQuery) ||
       invoice.CustomerName.toLowerCase().includes(searchQuery) ||
       invoice.AmountPaid.toString().includes(searchQuery);
 
@@ -404,7 +407,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                       }}
                     >
                       <td className="px-4 py-4 whitespace-nowrap text-gray-600 font-medium">
-                        {row._id}
+                        {row.InvoiceID || row._id}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-gray-800 font-medium">
                         {row.CustomerName}
@@ -451,7 +454,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                             disabled={!row.IsDue}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMarkAsPaid(row._id);
+                              handleMarkAsPaid(row.InvoiceID || row._id);
                             }}
                           >
                             {row.IsDue ? "Mark as Paid" : "Paid"}
@@ -460,7 +463,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                             className="px-4 py-2 rounded-md text-sm font-medium bg-red-500 text-white hover:bg-red-600 shadow-sm hover:shadow transition-all duration-200"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDelete(row._id);
+                              handleDelete(row.InvoiceID || row._id);
                             }}
                           >
                             Delete

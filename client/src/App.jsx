@@ -39,7 +39,7 @@ function App() {
         <Route path="/password-recovery" element={<PasswordRecovery />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <ToastContainer position="top-right" autoClose={1000} />
+      <ToastContainer position="top-right" autoClose={2000} />
     </BrowserRouter>
   );
 }

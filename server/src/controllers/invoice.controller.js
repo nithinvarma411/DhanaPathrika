@@ -5,10 +5,34 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import nodemailer from "nodemailer";
 
+const generateInvoiceID = async (customerName, invoiceDate, userId) => {
+    const namePart = customerName.substring(0, 4).toUpperCase();
+    const formattedDate = new Date(invoiceDate);
+    const day = formattedDate.getDate().toString().padStart(2, '0');
+    const month = (formattedDate.getMonth() + 1).toString().padStart(2, '0');
+    const year = formattedDate.getFullYear().toString().slice(-2);
+    const datePart = `${day}${month}${year}`;
+
+    // Count invoices for this customer on this date
+    const startOfDay = new Date(formattedDate.setHours(0, 0, 0, 0));
+    const endOfDay = new Date(formattedDate.setHours(23, 59, 59, 999));
+    
+    const customerDailyInvoiceCount = await Invoice.countDocuments({
+        user: userId,
+        CustomerName: customerName,
+        Date: {
+            $gte: startOfDay,
+            $lte: endOfDay
+        }
+    });
+
+    return `${namePart}${datePart}-${(customerDailyInvoiceCount + 1).toString().padStart(2, '0')}`;
+};
+
 const createInvoice = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date, PaymentMethod, IsDue, Discount } = req.body;
+        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date: invoiceDate, PaymentMethod, IsDue, Discount } = req.body;
 
         if (!CustomerName || !CustomerEmail || !AmountPaid || !PaymentMethod || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
@@ -37,13 +61,21 @@ const createInvoice = async (req, res) => {
             totalAmount += item.AmountPerItem * item.Quantity;
         }
 
+        if (Discount > totalAmount) {
+            return res.status(400).send({ "message": "Discount cannot be more than total amount" });
+        }
         // Check if DueDate is required
         if (AmountPaid < totalAmount && !DueDate) {
             return res.status(400).send({ "message": "Due Date is required when full payment is not made" });
         }
 
+        // Generate InvoiceID
+        const currentDate = invoiceDate ? new Date(invoiceDate) : new Date();
+        const InvoiceID = await generateInvoiceID(CustomerName, currentDate, userId);
+
         // Create invoice object
         const newInvoice = new Invoice({
+            InvoiceID,
             CustomerName,
             CustomerEmail,
             Items,
@@ -51,7 +83,7 @@ const createInvoice = async (req, res) => {
             Discount,
             DueDate: AmountPaid < totalAmount ? DueDate : undefined, // Only include DueDate if needed
             IsDue: AmountPaid < totalAmount,
-            Date,
+            Date: currentDate,
             PaymentMethod,
             user: userId
         });
@@ -102,7 +134,7 @@ const updateInvoice = async (req, res) => {
             Items, 
             AmountPaid, 
             DueDate, 
-            Date: invoiceDate, // Rename Date to invoiceDate to avoid conflict
+            Date: invoiceDate,
             PaymentMethod, 
             IsDue, 
             Discount, 

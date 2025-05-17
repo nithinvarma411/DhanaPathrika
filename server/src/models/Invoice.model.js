@@ -1,6 +1,7 @@
 import { Schema, model } from "mongoose";
 
 const invoiceSchema = new Schema({
+    InvoiceID: String,
     CustomerName: String,
     CustomerEmail: String,
     Items: [{

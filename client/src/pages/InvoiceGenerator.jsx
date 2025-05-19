@@ -19,7 +19,7 @@ const InvoiceGenerator = () => {
     amountPaid: "",
     discount: "",
     dueDate: "",
-    paymentMethod: ""
+    paymentMethod: "",
   });
 
   const [formData, setFormData] = useState({
@@ -35,58 +35,104 @@ const InvoiceGenerator = () => {
   const validateField = (name, value, index = null) => {
     if (index !== null) {
       const itemErrors = [...errors.items];
-      
+
       switch (name) {
-        case 'itemName':
-          itemErrors[index].itemName = value.trim() ? '' : 'Item name is required';
+        case "itemName":
+          itemErrors[index].itemName = value.trim()
+            ? ""
+            : "Item name is required";
           break;
-        case 'amountPerItem':
+        case "amountPerItem":
           if (!value) {
-            itemErrors[index].amountPerItem = 'Amount is required';
+            itemErrors[index].amountPerItem = "Amount is required";
           } else if (Number(value) <= 0) {
-            itemErrors[index].amountPerItem = 'Amount must be greater than 0';
+            itemErrors[index].amountPerItem = "Amount must be greater than 0";
           } else {
-            itemErrors[index].amountPerItem = '';
+            itemErrors[index].amountPerItem = "";
           }
           break;
-        case 'quantity':
+        case "quantity":
           if (!value) {
-            itemErrors[index].quantity = 'Quantity is required';
+            itemErrors[index].quantity = "Quantity is required";
           } else if (Number(value) <= 0) {
-            itemErrors[index].quantity = 'Quantity must be greater than 0';
+            itemErrors[index].quantity = "Quantity must be greater than 0";
           } else {
-            itemErrors[index].quantity = '';
+            itemErrors[index].quantity = "";
           }
           break;
       }
-      setErrors(prev => ({...prev, items: itemErrors}));
+      setErrors((prev) => ({ ...prev, items: itemErrors }));
     } else {
       switch (name) {
-        case 'customerName':
-          setErrors(prev => ({...prev, customerName: value.trim() ? '' : 'Customer name is required'}));
-          break;
-        case 'customerEmail':
-          if (!value.trim()) {
-            setErrors(prev => ({...prev, customerEmail: 'Email is required'}));
-          } else if (!/\S+@\S+\.\S+/.test(value)) {
-            setErrors(prev => ({...prev, customerEmail: 'Invalid email format'}));
-          } else {
-            setErrors(prev => ({...prev, customerEmail: ''}));
-          }
-          break;
-        case 'amountPaid':
-          if (!value) {
-            setErrors(prev => ({...prev, amountPaid: 'Amount paid is required'}));
-          } else if (Number(value) < 0) {
-            setErrors(prev => ({...prev, amountPaid: 'Amount cannot be negative'}));
-          } else {
-            setErrors(prev => ({...prev, amountPaid: ''}));
-          }
-          break;
-        case 'discount':
-          setErrors(prev => ({
+        case "customerName":
+          setErrors((prev) => ({
             ...prev,
-            discount: Number(value) < 0 ? 'Discount cannot be negative' : ''
+            customerName: value.trim() ? "" : "Customer name is required",
+          }));
+          break;
+        case "customerEmail":
+          if (!value.trim()) {
+            setErrors((prev) => ({
+              ...prev,
+              customerEmail: "Email is required",
+            }));
+          } else if (!/\S+@\S+\.\S+/.test(value)) {
+            setErrors((prev) => ({
+              ...prev,
+              customerEmail: "Invalid email format",
+            }));
+          } else {
+            setErrors((prev) => ({ ...prev, customerEmail: "" }));
+          }
+          break;
+        case "amountPaid":
+          if (!value) {
+            setErrors((prev) => ({
+              ...prev,
+              amountPaid: "Amount paid is required",
+            }));
+          } else if (Number(value) < 0) {
+            setErrors((prev) => ({
+              ...prev,
+              amountPaid: "Amount cannot be negative",
+            }));
+          } else {
+            setErrors((prev) => ({ ...prev, amountPaid: "" }));
+            // Check if due date is required
+            const totalAmount = formData.items.reduce(
+              (total, item) =>
+                total + Number(item.amountPerItem) * Number(item.quantity),
+              0
+            );
+            if (Number(value) < totalAmount && !formData.dueDate) {
+              setErrors((prev) => ({
+                ...prev,
+                dueDate: "Due date is required when full payment is not made",
+              }));
+            } else {
+              setErrors((prev) => ({ ...prev, dueDate: "" }));
+            }
+          }
+          break;
+        case "dueDate":
+          const totalAmount = formData.items.reduce(
+            (total, item) =>
+              total + Number(item.amountPerItem) * Number(item.quantity),
+            0
+          );
+          if (Number(formData.amountPaid) < totalAmount && !value) {
+            setErrors((prev) => ({
+              ...prev,
+              dueDate: "Due date is required when full payment is not made",
+            }));
+          } else {
+            setErrors((prev) => ({ ...prev, dueDate: "" }));
+          }
+          break;
+        case "discount":
+          setErrors((prev) => ({
+            ...prev,
+            discount: Number(value) < 0 ? "Discount cannot be negative" : "",
           }));
           break;
       }
@@ -108,7 +154,9 @@ const InvoiceGenerator = () => {
       if (name === "itemName" && value.trim() !== "") {
         try {
           const res = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/suggestions?query=${value}`,
+            `${
+              import.meta.env.VITE_BACKEND_URL
+            }api/v1/stock/suggestions?query=${value}`,
             { withCredentials: true }
           );
           const items = res.data.suggestions;
@@ -119,7 +167,9 @@ const InvoiceGenerator = () => {
 
           // Fetch the unit for the selected item
           const stockItemRes = await axios.get(
-            `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/getStockByName?name=${value}`,
+            `${
+              import.meta.env.VITE_BACKEND_URL
+            }api/v1/stock/getStockByName?name=${value}`,
             { withCredentials: true }
           );
           if (stockItemRes.data && stockItemRes.data.unit) {
@@ -157,17 +207,29 @@ const InvoiceGenerator = () => {
         { itemName: "", amountPerItem: "", quantity: "" },
       ],
     }));
+
+    // Add corresponding error state for the new item
+    setErrors((prevState) => ({
+      ...prevState,
+      items: [
+        ...prevState.items,
+        { itemName: "", amountPerItem: "", quantity: "" },
+      ],
+    }));
   };
 
   const fetchSuggestions = async (query, index) => {
     if (!query) return setSuggestions([]);
-  
+
     try {
       const res = await axios.get(
-        `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/suggestions?query=${query}`, {withCredentials: true}
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }api/v1/stock/suggestions?query=${query}`,
+        { withCredentials: true }
       );
       const items = res.data.suggestions; // your backend should return { suggestions: [...] }
-      
+
       const updatedSuggestions = [...suggestions];
       updatedSuggestions[index] = items;
       setSuggestions(updatedSuggestions);
@@ -175,7 +237,6 @@ const InvoiceGenerator = () => {
       console.error("Error fetching suggestions:", err);
     }
   };
-  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -248,7 +309,10 @@ const InvoiceGenerator = () => {
       <Header />
       <div className="min-h-screen bg-cover bg-center flex items-center justify-center p-4 md:p-8">
         <div className="bg-white w-full max-w-3xl p-6 md:p-8 rounded-lg shadow-lg relative">
-          <h2 className="text-2xl font-bold text-center text-red-600 mb-6" style={{ fontFamily: 'Poppins, sans-serif' }}>
+          <h2
+            className="text-2xl font-bold text-center text-red-600 mb-6"
+            style={{ fontFamily: "Poppins, sans-serif" }}
+          >
             GENERATE INVOICE
           </h2>
           <form onSubmit={handleSubmit}>
@@ -258,7 +322,10 @@ const InvoiceGenerator = () => {
                 <h3 className="text-lg font-semibold mb-2">Item {index + 1}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
-                    <label className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500" style={{ fontFamily: 'Roboto, sans-serif' }}>
+                    <label
+                      className="absolute left-3 -top-3 bg-white px-1 text-sm text-gray-500"
+                      style={{ fontFamily: "Roboto, sans-serif" }}
+                    >
                       Item Name
                     </label>
                     <input
@@ -269,13 +336,17 @@ const InvoiceGenerator = () => {
                         handleChange(e, index);
                         fetchSuggestions(e.target.value, index);
                       }}
-                      className={`border rounded px-3 py-2 w-full ${errors.items[index]?.itemName ? 'border-red-500' : ''}`}
+                      className={`border rounded px-3 py-2 w-full ${
+                        errors.items[index]?.itemName ? "border-red-500" : ""
+                      }`}
                       required
                       autoComplete="off"
-                      style={{ fontFamily: 'Arial, sans-serif' }}
+                      style={{ fontFamily: "Arial, sans-serif" }}
                     />
                     {errors.items[index]?.itemName && (
-                      <p className="text-red-500 text-xs mt-1">{errors.items[index].itemName}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.items[index].itemName}
+                      </p>
                     )}
                     {suggestions[index]?.length > 0 && (
                       <div className="absolute bg-white border border-gray-300 w-full mt-1 z-10 max-h-40 overflow-y-auto scrollbar-hide rounded shadow">
@@ -297,10 +368,15 @@ const InvoiceGenerator = () => {
                               // Fetch the unit for the selected item
                               try {
                                 const stockItemRes = await axios.get(
-                                  `${import.meta.env.VITE_BACKEND_URL}api/v1/stock/getStockByName?name=${suggestion}`,
+                                  `${
+                                    import.meta.env.VITE_BACKEND_URL
+                                  }api/v1/stock/getStockByName?name=${suggestion}`,
                                   { withCredentials: true }
                                 );
-                                if (stockItemRes.data && stockItemRes.data.unit) {
+                                if (
+                                  stockItemRes.data &&
+                                  stockItemRes.data.unit
+                                ) {
                                   setUnits((prevUnits) => ({
                                     ...prevUnits,
                                     [index]: stockItemRes.data.unit,
@@ -312,7 +388,10 @@ const InvoiceGenerator = () => {
                                   }));
                                 }
                               } catch (err) {
-                                console.error("Error fetching item details:", err);
+                                console.error(
+                                  "Error fetching item details:",
+                                  err
+                                );
                                 setUnits((prevUnits) => ({
                                   ...prevUnits,
                                   [index]: null, // Reset unit on error
@@ -337,11 +416,17 @@ const InvoiceGenerator = () => {
                       name="amountPerItem"
                       value={item.amountPerItem}
                       onChange={(e) => handleChange(e, index)}
-                      className={`border rounded px-3 py-2 w-full ${errors.items[index]?.amountPerItem ? 'border-red-500' : ''}`}
+                      className={`border rounded px-3 py-2 w-full ${
+                        errors.items[index]?.amountPerItem
+                          ? "border-red-500"
+                          : ""
+                      }`}
                       required
                     />
                     {errors.items[index]?.amountPerItem && (
-                      <p className="text-red-500 text-xs mt-1">{errors.items[index].amountPerItem}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.items[index].amountPerItem}
+                      </p>
                     )}
                   </div>
 
@@ -354,11 +439,15 @@ const InvoiceGenerator = () => {
                       name="quantity"
                       value={item.quantity}
                       onChange={(e) => handleChange(e, index)}
-                      className={`border rounded px-3 py-2 w-full ${errors.items[index]?.quantity ? 'border-red-500' : ''}`}
+                      className={`border rounded px-3 py-2 w-full ${
+                        errors.items[index]?.quantity ? "border-red-500" : ""
+                      }`}
                       required
                     />
                     {errors.items[index]?.quantity && (
-                      <p className="text-red-500 text-xs mt-1">{errors.items[index].quantity}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors.items[index].quantity}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -376,18 +465,26 @@ const InvoiceGenerator = () => {
                 },
                 { label: "Amount Paid", name: "amountPaid", type: "number" },
                 { label: "Total Discount", name: "discount", type: "number" },
-                { label: "Due Date", name: "dueDate", type: "date" },
+                {
+                  label: "Due Date",
+                  name: "dueDate",
+                  type: "date",
+                  min: new Date().toISOString().split("T")[0],
+                },
                 {
                   label: "Payment Method",
                   name: "paymentMethod",
                   type: "text",
                 },
-              ].map(({ label, name, type }) => (
+              ].map(({ label, name, type, min }) => (
                 <div
                   className="flex flex-col md:flex-row md:items-center"
                   key={name}
                 >
-                  <label className="md:w-40 text-gray-700 mb-1 md:mb-0" style={{ fontFamily: 'Roboto, sans-serif' }}>
+                  <label
+                    className="md:w-40 text-gray-700 mb-1 md:mb-0"
+                    style={{ fontFamily: "Roboto, sans-serif" }}
+                  >
                     {label} :-
                   </label>
                   <div className="w-full md:w-[55%]">
@@ -396,11 +493,16 @@ const InvoiceGenerator = () => {
                       name={name}
                       value={formData[name]}
                       onChange={handleChange}
-                      className={`w-full border-b border-black outline-none px-2 py-1 ${errors[name] ? 'border-red-500' : ''}`}
-                      style={{ fontFamily: 'Arial, sans-serif' }}
+                      className={`w-full border-b border-black outline-none px-2 py-1 ${
+                        errors[name] ? "border-red-500" : ""
+                      }`}
+                      style={{ fontFamily: "Arial, sans-serif" }}
+                      min={min}
                     />
                     {errors[name] && (
-                      <p className="text-red-500 text-xs mt-1">{errors[name]}</p>
+                      <p className="text-red-500 text-xs mt-1">
+                        {errors[name]}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -435,7 +537,7 @@ const InvoiceGenerator = () => {
           </form>
         </div>
       </div>
-      <Chatbot/>
+      <Chatbot />
     </div>
   );
 };

@@ -232,6 +232,9 @@ function StockMaintainance() {
       setFilteredItems(items); // Reset to show all items
       setIsGroupView(false); // Exit group view mode
     }
+    // Filter items that don't belong to any group
+    const ungroupedItems = items.filter(item => !item.Group);
+    setFilteredItems(ungroupedItems);
     setIsGroupCreationView(true);
     setSelectedItems([]); // Reset selected items
   };
@@ -355,12 +358,12 @@ function StockMaintainance() {
             </div>
             <div className="flex justify-between items-center mb-4">
               <h2
-                className="sm:text-2xl text-md text-red-700 font-bold"
+                className="hidden sm:block text-2xl text-red-700 font-bold"
                 style={{ fontFamily: "Poppins, sans-serif" }}
               >
                 Stock Maintainance :-
               </h2>
-              <div className="flex space-x-2">
+              <div className="flex justify-between sm:space-x-4 w-full sm:w-auto">
                 <button
                   onClick={() => navigate("/add-stock")}
                   className={`px-4 py-2 rounded-md flex items-center ${

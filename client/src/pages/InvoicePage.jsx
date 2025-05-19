@@ -66,7 +66,7 @@ const InvoicePage = () => {
       // Send the invoice image to the server
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/send-email`,
-        { image: dataUrl, invoiceId: invoice?._id },
+        { image: dataUrl, invoiceId: invoice?.InvoiceID || invoice?._id },
         { withCredentials: true }
       );
       toast.success("Invoice sent to email successfully.");

@@ -338,6 +338,8 @@ const getLatestInvoice = async (req, res) => {
 const sendInvoiceEmail = async (req, res) => {
     try {
         const { image, invoiceId } = req.body;
+        // console.log({image, invoiceId});
+        
         const userId = req.user.id;
         const userEmail = req.user.Email;
         
@@ -346,7 +348,7 @@ const sendInvoiceEmail = async (req, res) => {
             return res.status(400).send({ message: "Image and Invoice ID are required" });
         }
 
-        const invoice = await Invoice.findOne({ _id: invoiceId, user: userId }).populate("user");
+        const invoice = await Invoice.findOne({ InvoiceID: invoiceId, user: userId }).populate("user");
         if (!invoice) {
             return res.status(404).send({ message: "Invoice not found" });
         }

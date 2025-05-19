@@ -13,6 +13,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   const [profile, setProfile] = useState([]);
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
+  const [isSending, setIsSending] = useState(false);
   const toastShown = useRef(false);
   const profileShown = useRef(false);
   const invoiceRef = useRef(null);
@@ -76,7 +77,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
     let updatedInvoice;
     const updatedBillingData = billingData.map((invoice) => {
-      if ((invoice.InvoiceID || invoice._id) === invoiceId) {
+      if (invoice._id === invoiceId) {
         const totalAmount = invoice.Items.reduce((sum, item) => {
           return sum + item.AmountPerItem * item.Quantity;
         }, 0);
@@ -167,15 +168,21 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
     try {
       await axios.delete(
-        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/deleteInvoice/${invoiceId}`,
-        { 
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }api/v1/invoice/deleteInvoice/${invoiceId}`,
+        {
           data: { Password: password },
-          withCredentials: true 
+          withCredentials: true,
         }
       );
 
-      setBillingData(billingData.filter(invoice => (invoice.InvoiceID || invoice._id) !== invoiceId));
-      
+      setBillingData(
+        billingData.filter(
+          (invoice) => (invoice.InvoiceID || invoice._id) !== invoiceId
+        )
+      );
+
       Swal.fire({
         title: "Deleted!",
         text: "Invoice has been deleted.",
@@ -185,6 +192,8 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
           popup: "custom-swal",
         },
       });
+
+      window.location.reload();
     } catch (error) {
       console.error("Error deleting invoice:", error);
       Swal.fire({
@@ -219,15 +228,21 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     try {
       const invoiceId = updatedInvoice._id;
       const response = await axios.put(
-        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/updateInvoice/${invoiceId}`,
+        `${
+          import.meta.env.VITE_BACKEND_URL
+        }api/v1/invoice/updateInvoice/${invoiceId}`,
         updatedInvoice,
         { withCredentials: true }
       );
 
       // Update the local state with the updated invoice
-      setBillingData(billingData.map(invoice => 
-        (invoice.InvoiceID || invoice._id) === invoiceId ? response.data.invoice : invoice
-      ));
+      setBillingData(
+        billingData.map((invoice) =>
+          (invoice.InvoiceID || invoice._id) === invoiceId
+            ? response.data.invoice
+            : invoice
+        )
+      );
 
       setShowInvoiceModal(false);
       setIsEditing(false);
@@ -242,7 +257,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         },
       });
 
-      window.location.reload()
+      window.location.reload();
     } catch (error) {
       console.error("Error updating invoice:", error);
       Swal.fire({
@@ -273,17 +288,20 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
       const endOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() - selectedMonthDiff + 1,
-         0,
-         23,
-         59,
-         59,
-         999
+        0,
+        23,
+        59,
+        59,
+        999
       ); // Ensure the end of the month includes the last day
 
-      matchesMonth =
-        invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
+      matchesMonth = invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
     } else if (monthFilter === "This Month") {
-      const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+      const startOfMonth = new Date(
+        currentDate.getFullYear(),
+        currentDate.getMonth(),
+        1
+      );
       const endOfMonth = new Date(
         currentDate.getFullYear(),
         currentDate.getMonth() + 1,
@@ -294,8 +312,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         999
       );
 
-      matchesMonth =
-        invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
+      matchesMonth = invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
     }
 
     const matchesSearch =
@@ -316,6 +333,31 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
 
     return matchesSearch && matchesDate && matchesTab && matchesMonth;
   });
+  
+  
+  const sendInvoiceEmail = async () => {
+    if (!invoiceRef.current) return;
+    
+    setIsSending(true); // Start loading
+    try {
+      const dataUrl = await DomToImage.toJpeg(invoiceRef.current, {
+        quality: 0.95,
+      });
+      
+      // Send the invoice image to the server
+      await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/send-email`,
+        { image: dataUrl, invoiceId: selectedInvoice.InvoiceID },
+        { withCredentials: true }
+      );
+      toast.success("Invoice sent to email successfully.");
+    } catch (error) {
+      console.error("Error sending invoice email:", error);
+      toast.error("Failed to send invoice via email.");
+    } finally {
+      setIsSending(false); // End loading
+    }
+  };
 
   if (loading) {
     return (
@@ -374,7 +416,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                       Invoice Number
                     </th>
                     <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                      Vendor
+                      Customer Name
                     </th>
                     <th className="px-4 py-4 text-left text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
                       Billing Date
@@ -421,12 +463,17 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                           : "No Due"}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap text-gray-600 font-medium">
-                        ₹{(() => {
+                        ₹
+                        {(() => {
                           const totalAmount = row.Items.reduce(
-                            (sum, item) => sum + item.AmountPerItem * item.Quantity,
+                            (sum, item) =>
+                              sum + item.AmountPerItem * item.Quantity,
                             0
                           );
-                          return Math.max(totalAmount - row.AmountPaid, 0).toLocaleString();
+                          return Math.max(
+                            totalAmount - row.AmountPaid,
+                            0
+                          ).toLocaleString();
                         })()}
                       </td>
                       <td className="px-4 py-4 whitespace-nowrap">
@@ -454,7 +501,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                             disabled={!row.IsDue}
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleMarkAsPaid(row.InvoiceID || row._id);
+                              handleMarkAsPaid(row._id);
                             }}
                           >
                             {row.IsDue ? "Mark as Paid" : "Paid"}
@@ -463,7 +510,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                             className="px-4 py-2 rounded-md text-sm font-medium bg-red-500 text-white hover:bg-red-600 shadow-sm hover:shadow transition-all duration-200"
                             onClick={(e) => {
                               e.stopPropagation();
-                              handleDelete(row.InvoiceID || row._id);
+                              handleDelete(row._id);
                             }}
                           >
                             Delete
@@ -508,21 +555,33 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
               &times;
             </button>
             <div ref={invoiceRef}>
-              <Invoice 
-                invoice={selectedInvoice} 
-                profile={profile} 
+              <Invoice
+                invoice={selectedInvoice}
+                profile={profile}
                 isEditing={isEditing}
                 onUpdate={handleUpdate}
               />
             </div>
-            <div className="flex justify-center mt-4 gap-4">
+            <div >
               {!isEditing && (
-                <button
-                  className="px-4 py-2 bg-red-400 text-white rounded hover:bg-red-600"
-                  onClick={handleDownload}
-                >
-                  Download
-                </button>
+                <div className="flex justify-center mt-4 gap-4">
+                  <button
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                    onClick={handleDownload}
+                  >
+                    Download
+                  </button>
+
+                  <button
+                    onClick={sendInvoiceEmail}
+                    className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 ${
+                      isSending ? "opacity-50 cursor-not-allowed" : ""
+                    }`}
+                    disabled={isSending}
+                  >
+                    {isSending ? "Sending..." : "Send Invoice"}
+                  </button>
+                </div>
               )}
             </div>
           </div>

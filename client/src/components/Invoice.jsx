@@ -236,6 +236,7 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate }) => {
                   name="DueDate"
                   value={editableInvoice.DueDate ? new Date(editableInvoice.DueDate).toISOString().split('T')[0] : ''}
                   onChange={handleInputChange}
+                  min={new Date().toISOString().split('T')[0]}
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   required
                 />

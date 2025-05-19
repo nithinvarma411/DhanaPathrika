@@ -17,6 +17,7 @@ import JoinSandbox from "./pages/JoinSandbox";
 import SendMessage from "./pages/SendMessage";
 import Notification from "./pages/Notification";
 import PasswordRecovery from "./pages/PasswordRecovery";
+import ProfileCheck from "./components/ProfileCheck";
 
 function App() {
   return (
@@ -25,18 +26,18 @@ function App() {
         <Route path="/" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/details" element={<CompanyForm />} />
-
-        {/* Protected Routes */}
-        <Route path="/home" element={<Home />} />
-        <Route path="/profile" element={<Dashboard />} />
-        <Route path="/Bills" element={<BillingPage />} />
-        <Route path="/invoice-generator" element={<InvoiceGenerator />} />
-        <Route path="/invoice" element={<InvoicePage />} />
-        <Route path="/stock-maintenance" element={<StockMaintainance />} />
-        <Route path="/notification" element={<Notification />} />
-        <Route path="/add-stock" element={<AddStock />} />
-
         <Route path="/password-recovery" element={<PasswordRecovery />} />
+
+        {/* Protected Routes with Profile Check */}
+        <Route path="/home" element={<ProfileCheck><Home /></ProfileCheck>} />
+        <Route path="/profile" element={<ProfileCheck><Dashboard /></ProfileCheck>} />
+        <Route path="/Bills" element={<ProfileCheck><BillingPage /></ProfileCheck>} />
+        <Route path="/invoice-generator" element={<ProfileCheck><InvoiceGenerator /></ProfileCheck>} />
+        <Route path="/invoice" element={<ProfileCheck><InvoicePage /></ProfileCheck>} />
+        <Route path="/stock-maintenance" element={<ProfileCheck><StockMaintainance /></ProfileCheck>} />
+        <Route path="/notification" element={<ProfileCheck><Notification /></ProfileCheck>} />
+        <Route path="/add-stock" element={<ProfileCheck><AddStock /></ProfileCheck>} />
+
         <Route path="*" element={<NotFound />} />
       </Routes>
       <ToastContainer position="top-right" autoClose={2000} />

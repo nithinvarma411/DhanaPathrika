@@ -1,6 +1,6 @@
 module github.com/nithinvarma411/CAPSTONE/GOserver
 
-go 1.24.2
+go 1.24
 
 require (
 	github.com/bytedance/sonic v1.13.2 // indirect

@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
@@ -11,9 +12,11 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("error loading dotenv", err)
+	// Only load .env locally (skip on Render)
+	if os.Getenv("RENDER") == "" {
+		if err := godotenv.Load(); err != nil {
+			log.Println("No .env file found (this is fine in production)")
+		}
 	}
 
 	config.ConnectDB()
@@ -21,14 +24,20 @@ func main() {
 	r := gin.Default()
 
 	// Configure CORS
-	config := cors.DefaultConfig()
-	config.AllowOrigins = []string{"http://localhost:5173"}
-	config.AllowCredentials = true
-	config.AllowHeaders = []string{"Origin", "Content-Type"}
-	r.Use(cors.New(config))
+	corsConfig := cors.DefaultConfig()
+	corsConfig.AllowOrigins = []string{os.Getenv("ORIGIN")}
+	corsConfig.AllowCredentials = true
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Type"}
+	r.Use(cors.New(corsConfig))
 
 	// Setup routes
 	routes.SetupRoutes(r)
 
-	r.Run(":8080")
+	// Use PORT from env (Render sets this)
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080" // fallback for local dev
+	}
+
+	r.Run(":" + port)
 }

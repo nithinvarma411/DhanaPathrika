@@ -3,9 +3,13 @@ import React, { useState } from "react";
 const BillingSearchFilter = ({ setSearchQuery, setSelectedDate }) => {
   const [date, setDate] = useState("");
 
+  // Get today's date in YYYY-MM-DD format
+  const today = new Date().toISOString().split('T')[0];
+
   const handleDateChange = (e) => {
-    setDate(e.target.value);
-    setSelectedDate(e.target.value);
+    const selectedDate = e.target.value;
+    setDate(selectedDate);
+    setSelectedDate(selectedDate);
   };
 
   const clearDateFilter = () => {
@@ -40,6 +44,7 @@ const BillingSearchFilter = ({ setSearchQuery, setSelectedDate }) => {
           type="date"
           value={date}
           onChange={handleDateChange}
+          max={today}
           className="border border-gray-300 px-3 py-2 rounded-md focus:ring-2 focus:ring-green-500 focus:border-green-500"
         />
         {date && (

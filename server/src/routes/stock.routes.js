@@ -33,7 +33,7 @@ router.route("/delete/:id").delete(deleteStock);
 router.route("/deleteGroup").post(deleteGroup);
 router.route("/removeFromGroup").put(removeFromGroup);
 router.route("/suggestions").get(stockSuggestions);
-router.route("/addToGroup").put(addToGroup); // New route for adding an item to a group
-router.route("/getStockByName").get(getStockByName); // New route for fetching stock item by name
+router.route("/addToGroup").put(addToGroup);
+router.route("/getStockByName").get(getStockByName); 
 
 export default router;

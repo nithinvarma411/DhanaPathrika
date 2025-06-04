@@ -272,39 +272,64 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     }
   };
 
+  useEffect(() => {
+    if (selectedDate) {
+      const selectedDateTime = new Date(selectedDate);
+      const currentDate = new Date();
+      const diffInMonths =
+        (currentDate.getFullYear() - selectedDateTime.getFullYear()) * 12 +
+        (currentDate.getMonth() - selectedDateTime.getMonth());
+
+      if (diffInMonths === 0) {
+        setMonthFilter("This Month");
+      } else if (diffInMonths > 0 && diffInMonths <= 5) {
+        setMonthFilter(`${diffInMonths} Month${diffInMonths > 1 ? "s" : ""} Ago`);
+      } else {
+        setMonthFilter("Show All");
+      }
+    }
+  }, [selectedDate]);
+
   const filteredData = billingData.filter((invoice) => {
     const invoiceDate = new Date(invoice.Date);
     const currentDate = new Date();
 
-    // Match month filter
-    let matchesMonth = true;
-    if (monthFilter !== "This Month" && monthFilter !== "Show All") {
-      const selectedMonthDiff = parseInt(monthFilter.split(" ")[0]); // e.g., "2 Months Ago" => 2
-      const startOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() - selectedMonthDiff,
-        1
-      );
-      const endOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() - selectedMonthDiff + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-      ); // Ensure the end of the month includes the last day
+    // If a specific date is selected, it takes precedence over the month filter
+    if (selectedDate) {
+      const matchesSearch =
+        (invoice.InvoiceID || invoice._id).toLowerCase().includes(searchQuery) ||
+        invoice.CustomerName.toLowerCase().includes(searchQuery) ||
+        invoice.AmountPaid.toString().includes(searchQuery);
 
-      matchesMonth = invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
-    } else if (monthFilter === "This Month") {
+      const matchesDate = new Date(invoice.Date).toISOString().split("T")[0] ===
+        selectedDate;
+
+      const matchesTab =
+        selectedTab === "Overview"
+          ? true
+          : selectedTab === "Unpaid"
+          ? invoice.IsDue
+          : !invoice.IsDue;
+
+      return matchesSearch && matchesDate && matchesTab;
+    }
+
+    // Otherwise, use the month filter
+    let matchesMonth = true;
+    if (monthFilter !== "Show All") {
+      const monthDiff =
+        monthFilter === "This Month"
+          ? 0
+          : parseInt(monthFilter.split(" ")[0]);
+
       const startOfMonth = new Date(
         currentDate.getFullYear(),
-        currentDate.getMonth(),
+        currentDate.getMonth() - monthDiff,
         1
       );
       const endOfMonth = new Date(
         currentDate.getFullYear(),
-        currentDate.getMonth() + 1,
+        currentDate.getMonth() - monthDiff + 1,
         0,
         23,
         59,
@@ -320,10 +345,6 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
       invoice.CustomerName.toLowerCase().includes(searchQuery) ||
       invoice.AmountPaid.toString().includes(searchQuery);
 
-    const matchesDate = selectedDate
-      ? new Date(invoice.Date).toISOString().split("T")[0] === selectedDate
-      : true;
-
     const matchesTab =
       selectedTab === "Overview"
         ? true
@@ -331,19 +352,18 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         ? invoice.IsDue
         : !invoice.IsDue;
 
-    return matchesSearch && matchesDate && matchesTab && matchesMonth;
+    return matchesSearch && matchesMonth && matchesTab;
   });
-  
-  
+
   const sendInvoiceEmail = async () => {
     if (!invoiceRef.current) return;
-    
+
     setIsSending(true); // Start loading
     try {
       const dataUrl = await DomToImage.toJpeg(invoiceRef.current, {
         quality: 0.95,
       });
-      
+
       // Send the invoice image to the server
       await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/send-email`,
@@ -562,7 +582,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                 onUpdate={handleUpdate}
               />
             </div>
-            <div >
+            <div>
               {!isEditing && (
                 <div className="flex justify-center mt-4 gap-4">
                   <button

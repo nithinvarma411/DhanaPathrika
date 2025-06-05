@@ -11,6 +11,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   const [billingData, setBillingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState([]);
+  const [themes, setThemes] = useState(null); // Add this state
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [isSending, setIsSending] = useState(false);
@@ -44,6 +45,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
           (a, b) => new Date(b.Date) - new Date(a.Date)
         );
         setBillingData(sortedInvoices);
+        setThemes(response.data.themes); // Store themes from API response
 
         if (!toastShown.current) {
           toast.success(response.data.message);
@@ -213,7 +215,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
       DomToImage.toJpeg(invoiceRef.current, { quality: 0.95 })
         .then((dataUrl) => {
           const link = document.createElement("a");
-          link.download = "invoice.jpeg";
+          link.download = `${selectedInvoice.InvoiceID || selectedInvoice._id}.jpeg`;
           link.href = dataUrl;
           link.click();
         })
@@ -451,7 +453,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                       Status
                     </th>
                     <th className="px-4 py-4 text-right text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
-                      Amount
+                      Amount Paid
                     </th>
                     <th className="px-4 py-4 text-right text-xs md:text-sm font-semibold text-gray-600 uppercase tracking-wider">
                       Action
@@ -491,7 +493,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                             0
                           );
                           return Math.max(
-                            totalAmount - row.AmountPaid,
+                            totalAmount - row.AmountPaid - (row.Discount || 0),
                             0
                           ).toLocaleString();
                         })()}
@@ -580,6 +582,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                 profile={profile}
                 isEditing={isEditing}
                 onUpdate={handleUpdate}
+                themes={themes}
               />
             </div>
             <div>

@@ -64,8 +64,11 @@ const createInvoice = async (req, res) => {
         if (Discount > totalAmount) {
             return res.status(400).send({ "message": "Discount cannot be more than total amount" });
         }
+        
+        const totalAfterDiscount = totalAmount - Discount;
+        
         // Check if DueDate is required
-        if (AmountPaid < totalAmount && !DueDate) {
+        if (AmountPaid < totalAfterDiscount && !DueDate) {
             return res.status(400).send({ "message": "Due Date is required when full payment is not made" });
         }
 
@@ -81,8 +84,8 @@ const createInvoice = async (req, res) => {
             Items,
             AmountPaid,
             Discount,
-            DueDate: AmountPaid < totalAmount ? DueDate : undefined, // Only include DueDate if needed
-            IsDue: AmountPaid < totalAmount,
+            DueDate: AmountPaid < totalAfterDiscount ? DueDate : undefined, // Only include DueDate if needed
+            IsDue: AmountPaid < totalAfterDiscount,
             Date: currentDate,
             PaymentMethod,
             user: userId
@@ -100,15 +103,27 @@ const createInvoice = async (req, res) => {
 
 const getInvoices = async (req, res) => {
     try {
-        const userId = req.user.id
-    
+        const userId = req.user.id;
+        
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).send({"message": "User not found"});
+        }
+
         const invoices = await Invoice.find({user: userId});
         
         if (!invoices) {
             return res.status(404).send({"message": "No invoices present"});
         }
 
-        return res.status(201).send({"message": "Invoice retrived successfully", invoices})
+        return res.status(201).send({
+            "message": "Invoice retrieved successfully", 
+            invoices,
+            themes: {
+                PaidTheme: user.PaidTheme,
+                DueTheme: user.DueTheme
+            }
+        });
         
     } catch (error) {
         console.error("error fetching invoices", error);
@@ -409,4 +424,52 @@ const getMonthlyIncome = async (req, res) => {
     }
 };
 
-export { createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice, sendInvoiceEmail, getMonthlyIncome };
+const updateInvoiceTheme = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { PaidTheme, DueTheme } = req.body;
+
+        // Validate themes
+        if (PaidTheme && !["1", "2"].includes(PaidTheme)) {
+            return res.status(400).send({ "message": "Invalid PaidTheme value" });
+        }
+        if (DueTheme && !["1", "2"].includes(DueTheme)) {
+            return res.status(400).send({ "message": "Invalid DueTheme value" });
+        }
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            { 
+                ...(PaidTheme && { PaidTheme }),
+                ...(DueTheme && { DueTheme })
+            },
+            { new: true }
+        );
+
+        if (!updatedUser) {
+            return res.status(404).send({ "message": "User not found" });
+        }
+
+        return res.status(200).send({ 
+            "message": "Invoice themes updated successfully",
+            themes: {
+                PaidTheme: updatedUser.PaidTheme,
+                DueTheme: updatedUser.DueTheme
+            }
+        });
+    } catch (error) {
+        console.error("Error updating invoice themes", error);
+        return res.status(500).send({ "message": "Internal Server Error" });
+    }
+};
+
+export { 
+    createInvoice, 
+    getInvoices, 
+    updateInvoice, 
+    deleteInvoice, 
+    getLatestInvoice, 
+    sendInvoiceEmail, 
+    getMonthlyIncome,
+    updateInvoiceTheme 
+};

@@ -13,6 +13,16 @@ const userSchema = new Schema({
     FaceDescriptor: {
         type: [Number],
         default: null
+    },
+    PaidTheme: {
+        type: String,
+        enum: ["1", "2"],
+        default: "1"
+    },
+    DueTheme: {
+        type: String,
+        enum: ["1", "2"],
+        default: "1"
     }
 },{timestamps: true})
 

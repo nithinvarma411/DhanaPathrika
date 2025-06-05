@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
@@ -31,6 +31,42 @@ const InvoiceGenerator = () => {
     paymentMethod: "",
     items: [{ itemName: "", amountPerItem: "", quantity: "" }],
   });
+
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = useState(null);
+
+  // Add new useEffect for due date validation
+  useEffect(() => {
+    const netAmount = calculateNetAmount();
+    if (Number(formData.amountPaid) < netAmount) {
+      setErrors(prev => ({
+        ...prev,
+        dueDate: formData.dueDate ? "" : "Due date is required when full payment is not made"
+      }));
+    } else {
+      setErrors(prev => ({ ...prev, dueDate: "" }));
+    }
+  }, [formData.amountPaid, formData.discount]);
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('input[name="itemName"]')) {
+        setSuggestions([]);
+        setActiveSuggestionIndex(null);
+      }
+    };
+
+    document.addEventListener("click", handleClickOutside);
+    return () => document.removeEventListener("click", handleClickOutside);
+  }, []);
+
+  // Add this helper function after the state declarations
+  const calculateNetAmount = () => {
+    const subtotal = formData.items.reduce(
+      (total, item) => total + Number(item.amountPerItem) * Number(item.quantity),
+      0
+    );
+    return subtotal - Number(formData.discount || 0);
+  };
 
   const validateField = (name, value, index = null) => {
     if (index !== null) {
@@ -87,54 +123,30 @@ const InvoiceGenerator = () => {
           break;
         case "amountPaid":
           if (!value) {
-            setErrors((prev) => ({
-              ...prev,
-              amountPaid: "Amount paid is required",
-            }));
+            setErrors(prev => ({ ...prev, amountPaid: "Amount paid is required" }));
           } else if (Number(value) < 0) {
-            setErrors((prev) => ({
-              ...prev,
-              amountPaid: "Amount cannot be negative",
-            }));
+            setErrors(prev => ({ ...prev, amountPaid: "Amount cannot be negative" }));
           } else {
-            setErrors((prev) => ({ ...prev, amountPaid: "" }));
-            // Check if due date is required
-            const totalAmount = formData.items.reduce(
-              (total, item) =>
-                total + Number(item.amountPerItem) * Number(item.quantity),
-              0
-            );
-            if (Number(value) < totalAmount && !formData.dueDate) {
-              setErrors((prev) => ({
-                ...prev,
-                dueDate: "Due date is required when full payment is not made",
-              }));
-            } else {
-              setErrors((prev) => ({ ...prev, dueDate: "" }));
-            }
-          }
-          break;
-        case "dueDate":
-          const totalAmount = formData.items.reduce(
-            (total, item) =>
-              total + Number(item.amountPerItem) * Number(item.quantity),
-            0
-          );
-          if (Number(formData.amountPaid) < totalAmount && !value) {
-            setErrors((prev) => ({
-              ...prev,
-              dueDate: "Due date is required when full payment is not made",
-            }));
-          } else {
-            setErrors((prev) => ({ ...prev, dueDate: "" }));
+            setErrors(prev => ({ ...prev, amountPaid: "" }));
           }
           break;
         case "discount":
-          setErrors((prev) => ({
+          setErrors(prev => ({
             ...prev,
-            discount: Number(value) < 0 ? "Discount cannot be negative" : "",
+            discount: Number(value) < 0 ? "Discount cannot be negative" : ""
           }));
           break;
+        case "dueDate":
+          { const totalAfterDiscount = calculateNetAmount();
+          if (Number(formData.amountPaid) < totalAfterDiscount && !value) {
+            setErrors(prev => ({
+              ...prev,
+              dueDate: "Due date is required when full payment is not made"
+            }));
+          } else {
+            setErrors(prev => ({ ...prev, dueDate: "" }));
+          }
+          break; }
       }
     }
   };
@@ -151,44 +163,51 @@ const InvoiceGenerator = () => {
         items: updatedItems,
       }));
 
-      if (name === "itemName" && value.trim() !== "") {
-        try {
-          const res = await axios.get(
-            `${
-              import.meta.env.VITE_BACKEND_URL
-            }api/v1/stock/suggestions?query=${value}`,
-            { withCredentials: true }
-          );
-          const items = res.data.suggestions;
+      if (name === "itemName") {
+        setActiveSuggestionIndex(index);
+        if (value.trim() !== "") {
+          try {
+            const res = await axios.get(
+              `${
+                import.meta.env.VITE_BACKEND_URL
+              }api/v1/stock/suggestions?query=${value}`,
+              { withCredentials: true }
+            );
+            const items = res.data.suggestions;
 
-          const updatedSuggestions = [...suggestions];
-          updatedSuggestions[index] = items;
-          setSuggestions(updatedSuggestions);
+            const updatedSuggestions = [...suggestions];
+            updatedSuggestions[index] = items;
+            setSuggestions(updatedSuggestions);
 
-          // Fetch the unit for the selected item
-          const stockItemRes = await axios.get(
-            `${
-              import.meta.env.VITE_BACKEND_URL
-            }api/v1/stock/getStockByName?name=${value}`,
-            { withCredentials: true }
-          );
-          if (stockItemRes.data && stockItemRes.data.unit) {
+            // Fetch the unit for the selected item
+            const stockItemRes = await axios.get(
+              `${
+                import.meta.env.VITE_BACKEND_URL
+              }api/v1/stock/getStockByName?name=${value}`,
+              { withCredentials: true }
+            );
+            if (stockItemRes.data && stockItemRes.data.unit) {
+              setUnits((prevUnits) => ({
+                ...prevUnits,
+                [index]: stockItemRes.data.unit,
+              }));
+            } else {
+              setUnits((prevUnits) => ({
+                ...prevUnits,
+                [index]: null, // Reset unit if not found
+              }));
+            }
+          } catch (err) {
+            console.error("Error fetching item details:", err);
             setUnits((prevUnits) => ({
               ...prevUnits,
-              [index]: stockItemRes.data.unit,
-            }));
-          } else {
-            setUnits((prevUnits) => ({
-              ...prevUnits,
-              [index]: null, // Reset unit if not found
+              [index]: null, // Reset unit on error
             }));
           }
-        } catch (err) {
-          console.error("Error fetching item details:", err);
-          setUnits((prevUnits) => ({
-            ...prevUnits,
-            [index]: null, // Reset unit on error
-          }));
+        } else {
+          const updatedSuggestions = [...suggestions];
+          updatedSuggestions[index] = [];
+          setSuggestions(updatedSuggestions);
         }
       }
     } else {
@@ -256,15 +275,15 @@ const InvoiceGenerator = () => {
       })),
       Date: new Date().toISOString(),
       IsDue:
-        formData.amountPaid <
-        formData.items.reduce(
+        Number(formData.amountPaid) <
+        (formData.items.reduce(
           (total, item) => total + item.amountPerItem * item.quantity,
           0
-        ),
+        ) - Number(formData.discount || 0)),
     };
 
     try {
-      console.log(formData.discount);
+      // console.log(formData.discount);
 
       const response = await axios.post(
         `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/createInvoice`,
@@ -298,9 +317,9 @@ const InvoiceGenerator = () => {
 
   const getAmountPerItemLabel = (index) => {
     const unit = units[index];
-    if (unit === "pcs") return "Amount Per Item (After discount)";
-    if (unit === "kg") return "Amount Per kg (After discount)";
-    if (unit === "L") return "Amount Per Litre (After discount)";
+    if (unit === "pcs") return "Amount Per Item (Before discount)";
+    if (unit === "kg") return "Amount Per kg (Before discount)";
+    if (unit === "L") return "Amount Per Litre (Before discount)";
     return "Amount Per Item"; // Default label
   };
 
@@ -408,7 +427,7 @@ const InvoiceGenerator = () => {
                   </div>
 
                   <div className="relative">
-                    <label className="absolute left-2 -top-3 bg-white px-1 text-sm text-gray-500">
+                    <label className="absolute left-1 -top-3 bg-white px-0 text-sm text-gray-500">
                       {getAmountPerItemLabel(index)}
                     </label>
                     <input
@@ -416,7 +435,7 @@ const InvoiceGenerator = () => {
                       name="amountPerItem"
                       value={item.amountPerItem}
                       onChange={(e) => handleChange(e, index)}
-                      className={`border rounded px-3 py-2 w-full ${
+                      className={`border rounded px-1 py-2 w-full ${
                         errors.items[index]?.amountPerItem
                           ? "border-red-500"
                           : ""

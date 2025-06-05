@@ -13,6 +13,7 @@ import InvoiceGenerator from "./pages/InvoiceGenerator";
 import StockMaintainance from "./pages/StockMaintainance";
 import AddStock from "./pages/AddStock";
 import NotFound from "./pages/NotFound";
+import StampTemplate from "./pages/StampTemplate";
 import JoinSandbox from "./pages/JoinSandbox";
 import SendMessage from "./pages/SendMessage";
 import Notification from "./pages/Notification";
@@ -37,6 +38,7 @@ function App() {
         <Route path="/stock-maintenance" element={<ProfileCheck><StockMaintainance /></ProfileCheck>} />
         <Route path="/notification" element={<ProfileCheck><Notification /></ProfileCheck>} />
         <Route path="/add-stock" element={<ProfileCheck><AddStock /></ProfileCheck>} />
+        <Route path="/stamp-templates" element={<ProfileCheck><StampTemplate /></ProfileCheck>} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

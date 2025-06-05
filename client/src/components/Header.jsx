@@ -317,6 +317,12 @@ const Header = () => {
             >
               Notification
             </Link>
+            <Link
+              to="/stamp-templates"
+              className="block hover:bg-[#a05e5e61] p-2 rounded"
+            >
+              Stamp Templates
+            </Link>
             <button
               className="block hover:bg-[#a05e5e61] p-2 rounded"
               onClick={toggleForm}

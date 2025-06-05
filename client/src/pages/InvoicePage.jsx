@@ -11,6 +11,7 @@ import Chatbot from "../components/Chatbot";
 const InvoicePage = () => {
   const [invoice, setInvoice] = useState(null);
   const [profile, setProfile] = useState(null);
+  const [themes, setThemes] = useState(null); // Add this state
   const [isSending, setIsSending] = useState(false); // Loading state for sending email
   const invoiceRef = useRef(null);
 
@@ -56,6 +57,22 @@ const InvoicePage = () => {
     }
   }, []);
   
+  useEffect(() => {
+    const fetchThemes = async () => {
+      try {
+        const response = await axios.get(
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/getInvoices`,
+          { withCredentials: true }
+        );
+        setThemes(response.data.themes);
+      } catch (error) {
+        console.error("Error fetching themes:", error);
+      }
+    };
+  
+    fetchThemes();
+  }, []);
+  
   const sendInvoiceEmail = async () => {
     if (!invoiceRef.current) return;
 
@@ -86,7 +103,7 @@ const InvoicePage = () => {
     
       const link = document.createElement("a");
       link.href = dataUrl;
-      link.download = `Invoice_${invoice?._id || "Download"}.jpeg`;
+      link.download = `Invoice_${invoice?.InvoiceID || "Download"}.jpeg`;      
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -100,7 +117,7 @@ const InvoicePage = () => {
       <Header />
       <div className="flex-1 overflow-auto p-4">
         <div ref={invoiceRef}>
-          <Invoice invoice={invoice} profile={profile} />
+          <Invoice invoice={invoice} profile={profile} themes={themes} />
         </div>
         <div className="text-center mt-4 flex justify-center gap-4">
           <button 

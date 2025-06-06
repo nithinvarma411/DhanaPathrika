@@ -1,6 +1,6 @@
 # 🏢 Dhana Pathrika - Modern Business Management System
 
-![Dhana Pathrika Logo](client/src/assets/logo.jpg)
+<img src="client/src/assets/logo.jpg" alt="Dhana Pathrika Logo" width="200" height="auto">
 
 ## 🌟 Overview
 

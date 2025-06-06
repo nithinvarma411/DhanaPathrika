@@ -9,13 +9,24 @@ const BillingPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedTab, setSelectedTab] = useState("Overview");
+  const [monthFilter, setMonthFilter] = useState("This Month");
 
   return (
     <div className="container mx-auto px-4 py-6">
       <BillingHeader />
       <BillingNavTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
-      <BillingSearchFilter setSearchQuery={setSearchQuery} setSelectedDate={setSelectedDate} />
-      <BillingTable searchQuery={searchQuery} selectedDate={selectedDate} selectedTab={selectedTab} />
+      <BillingSearchFilter 
+        setSearchQuery={setSearchQuery} 
+        setSelectedDate={setSelectedDate}
+        setMonthFilter={setMonthFilter} 
+      />
+      <BillingTable 
+        searchQuery={searchQuery} 
+        selectedDate={selectedDate} 
+        selectedTab={selectedTab}
+        monthFilter={monthFilter}
+        setMonthFilter={setMonthFilter}
+      />
       <Chatbot/>
     </div>
   );

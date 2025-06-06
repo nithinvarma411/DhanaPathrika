@@ -129,7 +129,54 @@ const getInvoices = async (req, res) => {
         console.error("error fetching invoices", error);
         return res.status(500).send({"message": "Internal Server Error"});
     }
+}
 
+const getFilteredInvoices = async (req, res) => {
+    try {
+        const userId = req.user.id;
+        const { monthFilter } = req.params;
+        
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).send({"message": "User not found"});
+        }
+
+        const currentDate = new Date();
+        let startDate, endDate;
+
+        if (monthFilter === "Show All") {
+            startDate = new Date(0);
+            endDate = new Date();
+        } else if (monthFilter === "This Month") {
+            startDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+            endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
+        } else {
+            const monthsAgo = parseInt(monthFilter);
+            startDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - monthsAgo, 1);
+            endDate = new Date(currentDate.getFullYear(), currentDate.getMonth() - monthsAgo + 1, 0);
+        }
+
+        const invoices = await Invoice.find({
+            user: userId,
+            Date: {
+                $gte: startDate,
+                $lte: endDate
+            }
+        }).sort({ Date: -1 });
+
+        return res.status(200).send({
+            "message": "Filtered invoices retrieved successfully", 
+            invoices,
+            themes: {
+                PaidTheme: user.PaidTheme,
+                DueTheme: user.DueTheme
+            }
+        });
+        
+    } catch (error) {
+        console.error("error fetching filtered invoices", error);
+        return res.status(500).send({"message": "Internal Server Error"});
+    }
 }
 
 
@@ -465,7 +512,8 @@ const updateInvoiceTheme = async (req, res) => {
 
 export { 
     createInvoice, 
-    getInvoices, 
+    getInvoices,
+    getFilteredInvoices,  // Add this
     updateInvoice, 
     deleteInvoice, 
     getLatestInvoice, 

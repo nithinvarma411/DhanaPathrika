@@ -25,6 +25,7 @@ function StockMaintainance() {
   const [isAddItemView, setIsAddItemView] = useState(false); // New state for Add Item view
   const [selectedGroup, setSelectedGroup] = useState(null); // Track the selected group
   const [isExporting, setIsExporting] = useState(false);
+  const [showAllGroups, setShowAllGroups] = useState(false);
 
   const navigate = useNavigate();
 
@@ -185,6 +186,7 @@ function StockMaintainance() {
     setIsGroupView(true);
     setSelectedGroup(group); // Set the selected group
     setIsAddItemView(false); // Reset Add Item view
+    setShowAllGroups(false); // Close the dropdown when a group is selected
   };
 
   const handleItemSelection = (itemId) => {
@@ -199,6 +201,11 @@ function StockMaintainance() {
   const handleCreateGroup = async () => {
     if (!newGroupName.trim()) {
       toast.error("Group name cannot be empty");
+      return;
+    }
+
+    if (newGroupName.trim().length > 20) {
+      toast.error("Group name cannot exceed 20 characters");
       return;
     }
 
@@ -277,6 +284,7 @@ function StockMaintainance() {
           );
           setIsGroupView(false);
           toast.success(response.data.message);
+          window.location.reload();
         } else {
           toast.error(response.data.message);
         }
@@ -372,6 +380,11 @@ function StockMaintainance() {
     }
   };
 
+  const toggleShowAllGroups = () => {
+    if (isGroupView) return; // Don't toggle if a group is selected
+    setShowAllGroups(!showAllGroups);
+  };
+
   return (
     <div
       className="min-h-screen"
@@ -450,14 +463,19 @@ function StockMaintainance() {
             {isGroupCreationView && (
               <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-lg p-6 mb-6 shadow-md">
                 <div className="flex flex-col md:flex-row justify-center items-center gap-4">
-                  <div className="relative w-full md:w-1/3">
+                  <div className="relative w-fit">
                     <input
                       type="text"
                       placeholder="Enter Group Name"
-                      className="w-full px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
+                      className="px-4 py-3 border-2 border-gray-200 rounded-lg focus:ring-2 focus:ring-red-500 focus:border-transparent transition-all"
                       value={newGroupName}
                       onChange={(e) => setNewGroupName(e.target.value)}
+                      maxLength={20}
+                      style={{ width: `${Math.max(200, newGroupName.length * 12)}px` }}
                     />
+                    <div className="text-right text-sm text-gray-500 mt-1">
+                      {newGroupName.length}/20
+                    </div>
                   </div>
                   <div className="flex gap-3">
                     <button
@@ -501,28 +519,98 @@ function StockMaintainance() {
               </div>
             )}
 
-            <div className="flex overflow-x-auto scrollbar-hide gap-3 mb-6 py-2">
-              {groups.map((group, index) => (
-                <button
-                  key={index}
-                  onClick={() => handleGroupClick(group)}
-                  className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 whitespace-nowrap
-        ${isGroupView && filteredItems[0]?.Group === group
-          ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
-          : "bg-white text-gray-700 border-2 border-gray-200 hover:border-red-500 hover:text-red-500"
-        }`}
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
+            <div className="relative">
+              <div className={`flex overflow-x-auto scrollbar-hide gap-3 mb-6 py-2 ${showAllGroups ? 'hidden' : 'block'}`}>
+                {groups.slice(0, 3).map((group, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleGroupClick(group)}
+                    className={`px-6 py-3 rounded-lg font-medium transition-all duration-300 transform hover:scale-105 flex items-center gap-2 whitespace-nowrap
+                      ${isGroupView && filteredItems[0]?.Group === group
+                        ? "bg-gradient-to-r from-red-500 to-red-600 text-white shadow-lg"
+                        : "bg-white text-gray-700 border-2 border-gray-200 hover:border-red-500 hover:text-red-500"
+                      }`}
                   >
-                    <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
-                  </svg>
-                  {group}
-                </button>
-              ))}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                    </svg>
+                    {group}
+                  </button>
+                ))}
+                {groups.length > 3 && !isGroupView && (
+                  <button
+                    onClick={toggleShowAllGroups}
+                    className="px-4 py-2 rounded-lg bg-white text-gray-700 border-2 border-gray-200 hover:border-red-500 hover:text-red-500"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-5 w-5"
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                  </button>
+                )}
+              </div>
+
+              {/* Dropdown menu for all groups */}
+              {showAllGroups && !isGroupView && (
+                <div className="absolute z-10 w-full bg-black rounded-lg shadow-xl py-2 mb-6 max-h-[80vh] overflow-auto">
+                  <div className="flex justify-end px-4 sticky top-0 bg-black">
+                    <button
+                      onClick={() => setShowAllGroups(false)}
+                      className="text-white hover:text-red-500 transition-colors p-2"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-6 w-6" 
+                        fill="none" 
+                        viewBox="0 0 24 24" 
+                        stroke="currentColor"
+                      >
+                        <path 
+                          strokeLinecap="round" 
+                          strokeLinejoin="round" 
+                          strokeWidth={2} 
+                          d="M6 18L18 6M6 6l12 12" 
+                        />
+                      </svg>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 p-4">
+                    {groups.map((group, index) => (
+                      <button
+                        key={index}
+                        onClick={() => {
+                          handleGroupClick(group);
+                          setShowAllGroups(false);
+                        }}
+                        className="px-4 py-2 rounded-lg font-medium transition-all duration-300 hover:scale-105 flex items-center gap-2 whitespace-nowrap bg-gray-800 text-white hover:bg-gray-700 text-sm md:text-base"
+                      >
+                        <svg
+                          xmlns="http://www.w3.org/2000/svg"
+                          className="h-4 w-4 md:h-5 md:w-5 flex-shrink-0"
+                          viewBox="0 0 20 20"
+                          fill="currentColor"
+                        >
+                          <path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2 2H4a2 2 0 01-2-2v-4z" />
+                        </svg>
+                        <span className="truncate">{group}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {isGroupView && (
@@ -605,7 +693,7 @@ function StockMaintainance() {
                         S.No
                       </th>
                     )}
-                    <th className="border border-gray-300 px-4 py-2 text-left">
+                    <th className="border border-gray-300 px-4 py-2 text-left min-w-[200px] sm:min-w-0">
                       Item Name
                     </th>
                     <th className="border border-gray-300 px-4 py-2 text-left">
@@ -647,7 +735,7 @@ function StockMaintainance() {
                           {index + 1}
                         </td>
                       )}
-                      <td className="border border-gray-300 px-4 py-2">
+                      <td className="border border-gray-300 px-4 py-2 min-w-[200px] sm:min-w-0">
                         <input
                           type="text"
                           className="w-full focus:outline-none"

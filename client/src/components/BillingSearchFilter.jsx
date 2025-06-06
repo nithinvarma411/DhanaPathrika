@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const BillingSearchFilter = ({ setSearchQuery, setSelectedDate }) => {
+const BillingSearchFilter = ({ setSearchQuery, setSelectedDate, setMonthFilter }) => {
   const [date, setDate] = useState("");
 
   // Get today's date in YYYY-MM-DD format
@@ -10,11 +10,28 @@ const BillingSearchFilter = ({ setSearchQuery, setSelectedDate }) => {
     const selectedDate = e.target.value;
     setDate(selectedDate);
     setSelectedDate(selectedDate);
+
+    // Calculate months difference and set month filter
+    if (selectedDate) {
+      const currentDate = new Date();
+      const selectedDateTime = new Date(selectedDate);
+      const monthsDiff = (currentDate.getFullYear() - selectedDateTime.getFullYear()) * 12 + 
+                        (currentDate.getMonth() - selectedDateTime.getMonth());
+      
+      if (monthsDiff === 0) {
+        setMonthFilter("This Month");
+      } else if (monthsDiff > 0 && monthsDiff <= 5) {
+        setMonthFilter(`${monthsDiff} Month${monthsDiff > 1 ? 's' : ''} Ago`);
+      } else {
+        setMonthFilter("Show All");
+      }
+    }
   };
 
   const clearDateFilter = () => {
     setDate("");
     setSelectedDate("");
+    setMonthFilter("Show All"); // Reset month filter
   };
 
   return (

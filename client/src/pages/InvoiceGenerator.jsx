@@ -11,7 +11,7 @@ const InvoiceGenerator = () => {
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
-  const [units, setUnits] = useState({}); // Store units for each item
+  const [units, setUnits] = useState({});
   const [errors, setErrors] = useState({
     items: [{ itemName: "", amountPerItem: "", quantity: "" }],
     customerName: "",
@@ -59,7 +59,7 @@ const InvoiceGenerator = () => {
     return () => document.removeEventListener("click", handleClickOutside);
   }, []);
 
-  // Add this helper function after the state declarations
+  // Calculates the net amount after applying discount
   const calculateNetAmount = () => {
     const subtotal = formData.items.reduce(
       (total, item) => total + Number(item.amountPerItem) * Number(item.quantity),
@@ -68,6 +68,22 @@ const InvoiceGenerator = () => {
     return subtotal - Number(formData.discount || 0);
   };
 
+  // Calculates detailed invoice amounts including subtotal, total, and balance
+  const calculateTotalAmount = () => {
+    const subtotal = formData.items.reduce(
+      (total, item) => 
+        total + (Number(item.amountPerItem) || 0) * (Number(item.quantity) || 0),
+      0
+    );
+    const discount = Number(formData.discount) || 0;
+    const total = subtotal - discount;
+    const amountPaid = Number(formData.amountPaid) || 0;
+    const balance = total - amountPaid;
+    
+    return { subtotal, total, balance };
+  };
+
+  // Validates form fields and updates error states
   const validateField = (name, value, index = null) => {
     if (index !== null) {
       const itemErrors = [...errors.items];
@@ -151,6 +167,7 @@ const InvoiceGenerator = () => {
     }
   };
 
+  // Handles form field changes and performs necessary validations
   const handleChange = async (e, index = null) => {
     const { name, value } = e.target;
     validateField(name, value, index);
@@ -218,6 +235,7 @@ const InvoiceGenerator = () => {
     }
   };
 
+  // Adds a new empty item to the invoice
   const addItem = () => {
     setFormData((prevState) => ({
       ...prevState,
@@ -237,6 +255,7 @@ const InvoiceGenerator = () => {
     }));
   };
 
+  // Fetches item suggestions based on user input
   const fetchSuggestions = async (query, index) => {
     if (!query) return setSuggestions([]);
 
@@ -257,6 +276,7 @@ const InvoiceGenerator = () => {
     }
   };
 
+  // Handles form submission and invoice generation
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -315,12 +335,54 @@ const InvoiceGenerator = () => {
     formData.items[0].amountPerItem.trim() !== "" &&
     formData.items[0].quantity.trim() !== "";
 
+  // Gets the appropriate label for amount input based on unit type
   const getAmountPerItemLabel = (index) => {
     const unit = units[index];
     if (unit === "pcs") return "Amount Per Item (Before discount)";
     if (unit === "kg") return "Amount Per kg (Before discount)";
     if (unit === "L") return "Amount Per Litre (Before discount)";
     return "Amount Per Item"; // Default label
+  };
+
+  // Checks if all fields in an item are filled
+  const isItemFilled = (item) => {
+    return item.itemName.trim() !== '' && 
+           item.amountPerItem.trim() !== '' && 
+           item.quantity.trim() !== '';
+  };
+
+  // Checks if a new item can be added based on existing items' state
+  const canAddNewItem = () => {
+    // Check if all existing items are filled
+    return formData.items.every(item => isItemFilled(item));
+  };
+
+  // Deletes an item from the invoice and updates related states
+  const handleDeleteItem = (indexToDelete) => {
+    setFormData(prevState => ({
+      ...prevState,
+      items: prevState.items.filter((_, index) => index !== indexToDelete)
+    }));
+
+    setErrors(prevState => ({
+      ...prevState,
+      items: prevState.items.filter((_, index) => index !== indexToDelete)
+    }));
+
+    // Clear suggestions and units for deleted item
+    setSuggestions(prev => prev.filter((_, index) => index !== indexToDelete));
+    setUnits(prev => {
+      const newUnits = { ...prev };
+      delete newUnits[indexToDelete];
+      // Reindex the remaining units
+      Object.keys(newUnits).forEach(key => {
+        if (Number(key) > indexToDelete) {
+          newUnits[Number(key) - 1] = newUnits[key];
+          delete newUnits[key];
+        }
+      });
+      return newUnits;
+    });
   };
 
   return (
@@ -338,7 +400,18 @@ const InvoiceGenerator = () => {
             {/* Dynamic Item Fields with Numbering */}
             {formData.items.map((item, index) => (
               <div key={index} className="mb-4">
-                <h3 className="text-lg font-semibold mb-2">Item {index + 1}</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <h3 className="text-lg font-semibold">Item {index + 1}</h3>
+                  {formData.items.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteItem(index)}
+                      className="text-red-500 hover:text-red-700 px-2 py-1 rounded-full transition duration-300"
+                    >
+                      ✕ Delete
+                    </button>
+                  )}
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="relative">
                     <label
@@ -435,7 +508,8 @@ const InvoiceGenerator = () => {
                       name="amountPerItem"
                       value={item.amountPerItem}
                       onChange={(e) => handleChange(e, index)}
-                      className={`border rounded px-1 py-2 w-full ${
+                      onWheel={(e) => e.target.blur()}
+                      className={`border rounded px-1 py-2 w-full no-spinners ${
                         errors.items[index]?.amountPerItem
                           ? "border-red-500"
                           : ""
@@ -458,7 +532,8 @@ const InvoiceGenerator = () => {
                       name="quantity"
                       value={item.quantity}
                       onChange={(e) => handleChange(e, index)}
-                      className={`border rounded px-3 py-2 w-full ${
+                      onWheel={(e) => e.target.blur()}
+                      className={`border rounded px-3 py-2 w-full no-spinners ${
                         errors.items[index]?.quantity ? "border-red-500" : ""
                       }`}
                       required
@@ -472,6 +547,14 @@ const InvoiceGenerator = () => {
                 </div>
               </div>
             ))}
+
+            {/* Total Amount Display */}
+            <div className="bg-gray-100 p-4 rounded-lg mb-6 flex justify-between items-center">
+              <div className="text-lg font-semibold">Total Amount (After Discount):</div>
+              <div className="text-xl font-bold text-red-600">
+                ₹{calculateTotalAmount().total.toFixed(2)}
+              </div>
+            </div>
 
             {/* Customer Details */}
             <div className="space-y-4">
@@ -512,7 +595,10 @@ const InvoiceGenerator = () => {
                       name={name}
                       value={formData[name]}
                       onChange={handleChange}
+                      onWheel={type === 'number' ? (e) => e.target.blur() : undefined}
                       className={`w-full border-b border-black outline-none px-2 py-1 ${
+                        type === "number" ? "no-spinners" : ""
+                      } ${
                         errors[name] ? "border-red-500" : ""
                       }`}
                       style={{ fontFamily: "Arial, sans-serif" }}
@@ -534,9 +620,9 @@ const InvoiceGenerator = () => {
               <button
                 type="button"
                 onClick={addItem}
-                disabled={!isFirstItemFilled}
+                disabled={!canAddNewItem()}
                 className={`py-2 px-4 rounded-full transition duration-300 ${
-                  isFirstItemFilled
+                  canAddNewItem()
                     ? "bg-green-500 text-white hover:bg-green-700"
                     : "bg-gray-300 text-gray-500 cursor-not-allowed"
                 }`}

@@ -7,7 +7,7 @@ import { ClipLoader } from "react-spinners";
 import Invoice from "./Invoice";
 import DomToImage from "dom-to-image";
 
-const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
+const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, setMonthFilter }) => {
   const [billingData, setBillingData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [profile, setProfile] = useState([]);
@@ -18,8 +18,6 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   const toastShown = useRef(false);
   const profileShown = useRef(false);
   const invoiceRef = useRef(null);
-  const [monthFilter, setMonthFilter] = useState("This Month");
-  const [isEditing, setIsEditing] = useState(false);
 
   useEffect(() => {
     if (!profileShown.current) {
@@ -36,16 +34,14 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
   useEffect(() => {
     const fetchInvoices = async () => {
       try {
+        setLoading(true);
         const response = await axios.get(
-          `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/getInvoices`,
+          `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/getFilteredInvoices/${monthFilter}`,
           { withCredentials: true }
         );
 
-        const sortedInvoices = response.data.invoices.sort(
-          (a, b) => new Date(b.Date) - new Date(a.Date)
-        );
-        setBillingData(sortedInvoices);
-        setThemes(response.data.themes); // Store themes from API response
+        setBillingData(response.data.invoices);
+        setThemes(response.data.themes);
 
         if (!toastShown.current) {
           toast.success(response.data.message);
@@ -53,13 +49,14 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         }
       } catch (error) {
         console.error("Error fetching invoices:", error);
+        toast.error("Failed to fetch invoices");
       } finally {
         setLoading(false);
       }
     };
 
     fetchInvoices();
-  }, []);
+  }, [monthFilter]);
 
   const handleMarkAsPaid = async (invoiceId) => {
     const result = await Swal.fire({
@@ -247,7 +244,6 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
       );
 
       setShowInvoiceModal(false);
-      setIsEditing(false);
 
       Swal.fire({
         title: "Success!",
@@ -274,74 +270,8 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
     }
   };
 
-  useEffect(() => {
-    if (selectedDate) {
-      const selectedDateTime = new Date(selectedDate);
-      const currentDate = new Date();
-      const diffInMonths =
-        (currentDate.getFullYear() - selectedDateTime.getFullYear()) * 12 +
-        (currentDate.getMonth() - selectedDateTime.getMonth());
-
-      if (diffInMonths === 0) {
-        setMonthFilter("This Month");
-      } else if (diffInMonths > 0 && diffInMonths <= 5) {
-        setMonthFilter(`${diffInMonths} Month${diffInMonths > 1 ? "s" : ""} Ago`);
-      } else {
-        setMonthFilter("Show All");
-      }
-    }
-  }, [selectedDate]);
-
+  // Filter data only for search and tab
   const filteredData = billingData.filter((invoice) => {
-    const invoiceDate = new Date(invoice.Date);
-    const currentDate = new Date();
-
-    // If a specific date is selected, it takes precedence over the month filter
-    if (selectedDate) {
-      const matchesSearch =
-        (invoice.InvoiceID || invoice._id).toLowerCase().includes(searchQuery) ||
-        invoice.CustomerName.toLowerCase().includes(searchQuery) ||
-        invoice.AmountPaid.toString().includes(searchQuery);
-
-      const matchesDate = new Date(invoice.Date).toISOString().split("T")[0] ===
-        selectedDate;
-
-      const matchesTab =
-        selectedTab === "Overview"
-          ? true
-          : selectedTab === "Unpaid"
-          ? invoice.IsDue
-          : !invoice.IsDue;
-
-      return matchesSearch && matchesDate && matchesTab;
-    }
-
-    // Otherwise, use the month filter
-    let matchesMonth = true;
-    if (monthFilter !== "Show All") {
-      const monthDiff =
-        monthFilter === "This Month"
-          ? 0
-          : parseInt(monthFilter.split(" ")[0]);
-
-      const startOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() - monthDiff,
-        1
-      );
-      const endOfMonth = new Date(
-        currentDate.getFullYear(),
-        currentDate.getMonth() - monthDiff + 1,
-        0,
-        23,
-        59,
-        59,
-        999
-      );
-
-      matchesMonth = invoiceDate >= startOfMonth && invoiceDate <= endOfMonth;
-    }
-
     const matchesSearch =
       (invoice.InvoiceID || invoice._id).toLowerCase().includes(searchQuery) ||
       invoice.CustomerName.toLowerCase().includes(searchQuery) ||
@@ -354,7 +284,14 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
         ? invoice.IsDue
         : !invoice.IsDue;
 
-    return matchesSearch && matchesMonth && matchesTab;
+    const matchesDate = selectedDate
+      ? new Date(invoice.Date).toISOString().split('T')[0] === selectedDate
+      : true;
+
+    return matchesSearch && matchesTab && matchesDate;
+  }).sort((a, b) => {
+    // Always sort by date in descending order (newest first)
+    return new Date(b.Date) - new Date(a.Date);
   });
 
   const sendInvoiceEmail = async () => {
@@ -541,7 +478,6 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
                             className="px-4 py-2 rounded-md text-sm font-medium bg-blue-500 text-white hover:bg-blue-600 shadow-sm hover:shadow transition-all duration-200"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setIsEditing(true);
                               setSelectedInvoice(row);
                               setShowInvoiceModal(true);
                             }}
@@ -571,7 +507,6 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
               className="absolute top-2 right-3 text-gray-500 hover:text-black text-3xl"
               onClick={() => {
                 setShowInvoiceModal(false);
-                setIsEditing(false);
               }}
             >
               &times;
@@ -580,32 +515,29 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab }) => {
               <Invoice
                 invoice={selectedInvoice}
                 profile={profile}
-                isEditing={isEditing}
                 onUpdate={handleUpdate}
                 themes={themes}
               />
             </div>
             <div>
-              {!isEditing && (
-                <div className="flex justify-center mt-4 gap-4">
-                  <button
-                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
-                    onClick={handleDownload}
-                  >
-                    Download
-                  </button>
+              <div className="flex justify-center mt-4 gap-4">
+                <button
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  onClick={handleDownload}
+                >
+                  Download
+                </button>
 
-                  <button
-                    onClick={sendInvoiceEmail}
-                    className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 ${
-                      isSending ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                    disabled={isSending}
-                  >
-                    {isSending ? "Sending..." : "Send Invoice"}
-                  </button>
-                </div>
-              )}
+                <button
+                  onClick={sendInvoiceEmail}
+                  className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 ${
+                    isSending ? "opacity-50 cursor-not-allowed" : ""
+                  }`}
+                  disabled={isSending}
+                >
+                  {isSending ? "Sending..." : "Send Invoice"}
+                </button>
+              </div>
             </div>
           </div>
         </div>

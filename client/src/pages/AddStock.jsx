@@ -213,7 +213,8 @@ const AddStock = () => {
                   id="availableQuantity"
                   value={availableQuantity}
                   onChange={handleAvailableQuantityChange}
-                  className={`w-full border ${errors.availableQuantity ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500`}
+                  onWheel={(e) => e.target.blur()}
+                  className={`w-full border ${errors.availableQuantity ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500 no-spinners`}
                 />
                 <select
                   id="unit"
@@ -241,7 +242,8 @@ const AddStock = () => {
                 id="minimumQuantity"
                 value={minimumQuantity}
                 onChange={handleMinimumQuantityChange}
-                className={`w-full border ${errors.minimumQuantity ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500`}
+                onWheel={(e) => e.target.blur()}
+                className={`w-full border ${errors.minimumQuantity ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500 no-spinners`}
               />
               {errors.minimumQuantity && <p className="text-red-500 text-sm mt-1">{errors.minimumQuantity}</p>}
             </div>
@@ -276,7 +278,8 @@ const AddStock = () => {
                   id="costPrice"
                   value={costPrice}
                   onChange={handleCostPriceChange}
-                  className={`w-full border ${errors.costPrice ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500`}
+                  onWheel={(e) => e.target.blur()}
+                  className={`w-full border ${errors.costPrice ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500 no-spinners`}
                 />
                 {errors.costPrice && <p className="text-red-500 text-sm mt-1">{errors.costPrice}</p>}
               </div>
@@ -293,7 +296,8 @@ const AddStock = () => {
                   id="sellingPrice"
                   value={sellingPrice}
                   onChange={handleSellingPriceChange}
-                  className={`w-full border ${errors.sellingPrice ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500`}
+                  onWheel={(e) => e.target.blur()}
+                  className={`w-full border ${errors.sellingPrice ? 'border-red-500' : 'border-gray-300'} rounded-lg p-3 focus:outline-none focus:ring-2 focus:ring-red-500 no-spinners`}
                 />
                 {errors.sellingPrice && <p className="text-red-500 text-sm mt-1">{errors.sellingPrice}</p>}
               </div>

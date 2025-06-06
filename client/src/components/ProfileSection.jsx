@@ -252,10 +252,10 @@ const ProfileSection = () => {
                 <input
                   type="text"
                   name="MobileNumber"
-                  className="w-full border border-gray-200 rounded-r-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition cursor-not-allowed"
+                  className="w-full border border-gray-200 rounded-r-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
                   value={formData.MobileNumber}
-                  readOnly
-                  onClick={handleReadOnlyClick}
+                  onChange={handleChange}
+                  readOnly={!isEditing}
                 />
               </div>
             </div>

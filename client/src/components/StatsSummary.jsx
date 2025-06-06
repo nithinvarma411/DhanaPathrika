@@ -34,7 +34,7 @@ const StatsSummary = ({ invoices }) => {
       const invoiceMonth = invoiceDate.getMonth();
       const invoiceYear = invoiceDate.getFullYear();
 
-      const totalAmount = invoice.Items.reduce((sum, item) => sum + item.AmountPerItem * item.Quantity, 0);
+      const totalAmount = invoice.Items.reduce((sum, item) => sum + item.AmountPerItem * item.Quantity, 0) - (invoice.Discount);
       const dueAmount = totalAmount - invoice.AmountPaid;
 
       if (invoiceMonth === currentMonth && invoiceYear === currentYear) {

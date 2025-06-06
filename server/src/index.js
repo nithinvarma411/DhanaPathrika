@@ -13,7 +13,8 @@ import MongoStore from 'connect-mongo';
 const app = express();
 
 // Middleware
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 app.use(cors({
     origin: process.env.ORIGIN,
     credentials: true
@@ -36,7 +37,6 @@ import userRouter from '../src/routes/user.routes.js';
 import stockRouter from '../src/routes/stock.routes.js';
 import invoiceRouter from '../src/routes/invoice.routes.js';
 import profileRouter from '../src/routes/profile.routes.js';
-import twilioRouter from '../src/routes/twilio.routes.js';
 import resetpassRouter from '../src/routes/resetpass.router.js';
 import verifyRouter from '../src/routes/verify.routes.js';
 
@@ -46,7 +46,6 @@ app.use("/api/v1/verify", verifyRouter);
 app.use("/api/v1/stock", authenticate, stockRouter);
 app.use("/api/v1/invoice", authenticate, invoiceRouter);
 app.use("/api/v1/profile", authenticate, profileRouter);
-app.use("/api/v1/twilio", twilioRouter);
 
 // Google OAuth routes
 import { googleAuth, googleAuthCallback, googleAuthSuccess } from '../src/controllers/user.controller.js';

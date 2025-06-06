@@ -420,14 +420,17 @@ const getLatestInvoice = async (req, res) => {
 const sendInvoiceEmail = async (req, res) => {
     try {
         const { image, invoiceId } = req.body;
-        // console.log({image, invoiceId});
-        
         const userId = req.user.id;
         const userEmail = req.user.Email;
-        
 
         if (!image || !invoiceId) {
             return res.status(400).send({ message: "Image and Invoice ID are required" });
+        }
+
+        // Compress/optimize the base64 image if needed
+        const base64Data = image.split("base64,")[1];
+        if (!base64Data) {
+            return res.status(400).send({ message: "Invalid image format" });
         }
 
         const invoice = await Invoice.findOne({ InvoiceID: invoiceId, user: userId }).populate("user");
@@ -441,6 +444,7 @@ const sendInvoiceEmail = async (req, res) => {
                 user: process.env.MY_EMAIL,
                 pass: process.env.NODEMAILER_APP_PASSWORD,
             },
+            maxAttachmentSize: 50 * 1024 * 1024 // 50MB limit
         });
 
         const mailOptions = {
@@ -453,7 +457,7 @@ const sendInvoiceEmail = async (req, res) => {
             attachments: [
                 {
                     filename: `Invoice_${invoiceId}.jpeg`,
-                    content: image.split("base64,")[1],
+                    content: base64Data,
                     encoding: "base64",
                 },
             ],
@@ -463,6 +467,9 @@ const sendInvoiceEmail = async (req, res) => {
         return res.status(200).send({ message: "Invoice sent to email successfully" });
     } catch (error) {
         console.error("Error sending invoice email:", error);
+        if (error.message.includes('size limits')) {
+            return res.status(413).send({ message: "Invoice image is too large. Please try with fewer items." });
+        }
         return res.status(500).send({ message: "Internal Server Error" });
     }
 };
@@ -539,11 +546,21 @@ const storeImage = async (req, res) => {
             return res.status(400).send({ message: "Image and Invoice ID are required" });
         }
 
-        // Upload directly to Cloudinary from base64
+        // Check image size before uploading
+        const base64Size = image.length * 3 / 4; // Approximate size in bytes
+        const maxSize = 10 * 1024 * 1024; // 10MB limit
+
+        if (base64Size > maxSize) {
+            return res.status(413).send({ 
+                message: "Image size too large. Maximum size is 10MB.",
+                size: Math.round(base64Size / (1024 * 1024)) + "MB"
+            });
+        }
+
         const cloudinaryResponse = await uploadOnCloudinary(image);
         
         if (!cloudinaryResponse) {
-            return res.status(500).send({ message: "Error uploading image" });
+            return res.status(500).send({ message: "Error uploading image to cloud storage" });
         }
 
         return res.status(200).send({ 
@@ -553,7 +570,13 @@ const storeImage = async (req, res) => {
 
     } catch (error) {
         console.error("Error storing image:", error);
-        return res.status(500).send({ message: "Internal Server Error" });
+        if (error.message === "Image too large") {
+            return res.status(413).send({ message: "Image size too large for cloud storage" });
+        }
+        return res.status(500).send({ 
+            message: "Error uploading image",
+            error: error.message 
+        });
     }
 };
 

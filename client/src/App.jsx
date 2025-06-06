@@ -14,9 +14,8 @@ import StockMaintainance from "./pages/StockMaintainance";
 import AddStock from "./pages/AddStock";
 import NotFound from "./pages/NotFound";
 import StampTemplate from "./pages/StampTemplate";
-import JoinSandbox from "./pages/JoinSandbox";
-import SendMessage from "./pages/SendMessage";
 import Notification from "./pages/Notification";
+import LandingPage from "./pages/LandingPage";
 import PasswordRecovery from "./pages/PasswordRecovery";
 import ProfileCheck from "./components/ProfileCheck";
 
@@ -24,7 +23,8 @@ function App() {
   return (
     <BrowserRouter basename="/">
       <Routes>
-        <Route path="/" element={<Signup />} />
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/signup" element={<Signup />} />
         <Route path="/login" element={<Login />} />
         <Route path="/details" element={<CompanyForm />} />
         <Route path="/password-recovery" element={<PasswordRecovery />} />

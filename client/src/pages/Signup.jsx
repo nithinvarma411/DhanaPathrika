@@ -5,6 +5,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Eye, EyeOff } from "lucide-react";
 import { Link } from "react-router-dom";
+import { ChevronLeft } from "lucide-react";
 import bgImage from "../assets/bg.jpg";
 import logoImage from "../assets/logo.jpg";
 import mainImage from "../assets/main.jpg";
@@ -231,6 +232,15 @@ const Signup = () => {
       className="relative min-h-screen flex flex-col md:flex-row items-center justify-center bg-cover bg-center px-4 md:px-8"
       style={{ backgroundImage: `url(${bgImage})` }}
     >
+      {/* Updated Back Button with background */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 text-white flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 backdrop-blur-sm hover:bg-red-500/50 transition-all duration-300"
+      >
+        <ChevronLeft className="w-5 h-5" />
+        <span>Back</span>
+      </Link>
+
       <div className="absolute top-6 left-1/2 transform -translate-x-1/2 flex items-center z-10">
         <img
           src={logoImage}

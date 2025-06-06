@@ -357,7 +357,8 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
                       name={`item-Quantity-${index}`}
                       value={item.Quantity}
                       onChange={handleInputChange}
-                      min="1"
+                      min="0.01"
+                      step="0.01"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       required
                     />
@@ -371,7 +372,8 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
                       name={`item-AmountPerItem-${index}`}
                       value={item.AmountPerItem}
                       onChange={handleInputChange}
-                      min="0"
+                      min="0.01"
+                      step="0.01"
                       className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                       required
                     />

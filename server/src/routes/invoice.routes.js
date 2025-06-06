@@ -1,4 +1,4 @@
-import { createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice, sendInvoiceEmail, getMonthlyIncome, updateInvoiceTheme, getFilteredInvoices } from "../controllers/invoice.controller.js";
+import { createInvoice, getInvoices, updateInvoice, deleteInvoice, getLatestInvoice, sendInvoiceEmail, getMonthlyIncome, updateInvoiceTheme, getFilteredInvoices, storeImage } from "../controllers/invoice.controller.js";
 import { Router } from 'express';
 import rateLimit from 'express-rate-limit';
 
@@ -93,5 +93,6 @@ router.route("/send-email").post(sendEmailLimiter, sendInvoiceEmail);
 router.route("/monthly-income").get(monthlyIncomeLimiter, getMonthlyIncome);
 router.route("/updateTheme").patch(updateThemeLimiter, updateInvoiceTheme);
 router.get("/getFilteredInvoices/:monthFilter", getFilteredInvoices);
+router.post("/store-image", storeImage);
 
 export default router;

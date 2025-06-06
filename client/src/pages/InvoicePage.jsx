@@ -13,6 +13,7 @@ const InvoicePage = () => {
   const [profile, setProfile] = useState(null);
   const [themes, setThemes] = useState(null); // Add this state
   const [isSending, setIsSending] = useState(false); // Loading state for sending email
+  const [isWhatsAppSending, setIsWhatsAppSending] = useState(false);
   const invoiceRef = useRef(null);
 
   const hasFetchedInvoice = useRef(false);
@@ -112,6 +113,41 @@ const InvoicePage = () => {
     }
   };
 
+  const sendViaWhatsApp = async () => {
+    if (!invoiceRef.current || !invoice?.CustomerPhone) return;
+
+    setIsWhatsAppSending(true);
+    try {
+      const dataUrl = await domtoimage.toJpeg(invoiceRef.current, { quality: 0.95 });
+      
+      // Get temporary URL for the image
+      const imageResponse = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/store-image`,
+        { 
+          image: dataUrl, 
+          invoiceId: invoice.InvoiceID 
+        },
+        { withCredentials: true }
+      );
+
+      const imageUrl = imageResponse.data.imageUrl;
+      
+      // Format message with image link
+      const message = `Here's your invoice from ${profile?.CompanyName || 'us'}.\nInvoice ID: ${invoice.InvoiceID}\n\nView/Download your invoice here: ${imageUrl}`;
+      
+      // Open WhatsApp with pre-filled message
+      const whatsappUrl = `https://wa.me/${invoice.CustomerPhone.substring(1)}?text=${encodeURIComponent(message)}`;
+      window.open(whatsappUrl, '_blank');
+      
+      toast.success("WhatsApp message prepared successfully");
+    } catch (error) {
+      console.error("Error preparing WhatsApp message:", error);
+      toast.error("Failed to prepare WhatsApp message");
+    } finally {
+      setIsWhatsAppSending(false);
+    }
+  };
+
   return (
     <div className="flex flex-col h-screen" style={{ backgroundImage: `url(${bgImage})` }}>
       <Header />
@@ -133,8 +169,19 @@ const InvoicePage = () => {
             }`}
             disabled={isSending}
           >
-            {isSending ? "Sending..." : "Send Invoice"}
+            {isSending ? "Sending..." : "Send via Email"}
           </button>
+          {invoice?.CustomerPhone && (
+            <button
+              onClick={sendViaWhatsApp}
+              className={`bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 ${
+                isWhatsAppSending ? "opacity-50 cursor-not-allowed" : ""
+              }`}
+              disabled={isWhatsAppSending}
+            >
+              {isWhatsAppSending ? "Sending..." : "Send via WhatsApp"}
+            </button>
+          )}
         </div>
       </div>
       <Chatbot/>

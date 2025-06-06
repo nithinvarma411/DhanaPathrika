@@ -4,6 +4,7 @@ const invoiceSchema = new Schema({
     InvoiceID: String,
     CustomerName: String,
     CustomerEmail: String,
+    CustomerPhone: String, // Add this field
     Items: [{
         Name: String,
         AmountPerItem: Number,

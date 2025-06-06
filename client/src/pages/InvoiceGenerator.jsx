@@ -16,6 +16,7 @@ const InvoiceGenerator = () => {
     items: [{ itemName: "", amountPerItem: "", quantity: "" }],
     customerName: "",
     customerEmail: "",
+    customerPhone: "",
     amountPaid: "",
     discount: "",
     dueDate: "",
@@ -25,6 +26,7 @@ const InvoiceGenerator = () => {
   const [formData, setFormData] = useState({
     customerName: "",
     customerEmail: "",
+    customerPhone: "",
     amountPaid: "",
     discount: "",
     dueDate: "",
@@ -135,6 +137,21 @@ const InvoiceGenerator = () => {
             }));
           } else {
             setErrors((prev) => ({ ...prev, customerEmail: "" }));
+          }
+          break;
+        case "customerPhone":
+          if (!value.trim()) {
+            setErrors(prev => ({
+              ...prev,
+              customerPhone: "Phone number is required"
+            }));
+          } else if (!/^\d{10}$/.test(value)) {
+            setErrors(prev => ({
+              ...prev,
+              customerPhone: "Phone number must be exactly 10 digits"
+            }));
+          } else {
+            setErrors(prev => ({ ...prev, customerPhone: "" }));
           }
           break;
         case "amountPaid":
@@ -284,6 +301,7 @@ const InvoiceGenerator = () => {
     const invoiceData = {
       CustomerName: formData.customerName,
       CustomerEmail: formData.customerEmail,
+      CustomerPhone: `+91${formData.customerPhone}`, // Prepend +91 when sending
       AmountPaid: formData.amountPaid,
       DueDate: formData.dueDate,
       Discount: Number(formData.discount),
@@ -315,6 +333,7 @@ const InvoiceGenerator = () => {
       setFormData({
         customerName: "",
         customerEmail: "",
+        customerPhone: "",
         amountPaid: "",
         discount: 0,
         dueDate: "",
@@ -565,6 +584,13 @@ const InvoiceGenerator = () => {
                   name: "customerEmail",
                   type: "email",
                 },
+                {
+                  label: "Customer Phone",
+                  name: "customerPhone",
+                  type: "tel",
+                  placeholder: "10 digit number",
+                  prefix: "+91"
+                },
                 { label: "Amount Paid", name: "amountPaid", type: "number" },
                 { label: "Total Discount", name: "discount", type: "number" },
                 {
@@ -578,7 +604,7 @@ const InvoiceGenerator = () => {
                   name: "paymentMethod",
                   type: "text",
                 },
-              ].map(({ label, name, type, min }) => (
+              ].map(({ label, name, type, min, placeholder, prefix }) => (
                 <div
                   className="flex flex-col md:flex-row md:items-center"
                   key={name}
@@ -590,20 +616,41 @@ const InvoiceGenerator = () => {
                     {label} :-
                   </label>
                   <div className="w-full md:w-[55%]">
-                    <input
-                      type={type}
-                      name={name}
-                      value={formData[name]}
-                      onChange={handleChange}
-                      onWheel={type === 'number' ? (e) => e.target.blur() : undefined}
-                      className={`w-full border-b border-black outline-none px-2 py-1 ${
-                        type === "number" ? "no-spinners" : ""
-                      } ${
-                        errors[name] ? "border-red-500" : ""
-                      }`}
-                      style={{ fontFamily: "Arial, sans-serif" }}
-                      min={min}
-                    />
+                    {prefix ? (
+                      <div className="flex">
+                        <span className="border-b border-black px-2 py-1 bg-gray-100">
+                          {prefix}
+                        </span>
+                        <input
+                          type={type}
+                          name={name}
+                          value={formData[name]}
+                          onChange={handleChange}
+                          maxLength={10}
+                          className={`w-full border-b border-black outline-none px-2 py-1 ${
+                            errors[name] ? "border-red-500" : ""
+                          }`}
+                          style={{ fontFamily: "Arial, sans-serif" }}
+                          placeholder={placeholder}
+                        />
+                      </div>
+                    ) : (
+                      <input
+                        type={type}
+                        name={name}
+                        value={formData[name]}
+                        onChange={handleChange}
+                        onWheel={type === 'number' ? (e) => e.target.blur() : undefined}
+                        className={`w-full border-b border-black outline-none px-2 py-1 ${
+                          type === "number" ? "no-spinners" : ""
+                        } ${
+                          errors[name] ? "border-red-500" : ""
+                        }`}
+                        style={{ fontFamily: "Arial, sans-serif" }}
+                        min={min}
+                        placeholder={placeholder}
+                      />
+                    )}
                     {errors[name] && (
                       <p className="text-red-500 text-xs mt-1">
                         {errors[name]}

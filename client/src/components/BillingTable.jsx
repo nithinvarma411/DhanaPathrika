@@ -15,6 +15,9 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, set
   const [selectedInvoice, setSelectedInvoice] = useState(null);
   const [showInvoiceModal, setShowInvoiceModal] = useState(false);
   const [isSending, setIsSending] = useState(false);
+  const [isEditing, setIsEditing] = useState(false); // State for editing mode
+  const [isSendingWhatsApp, setIsSendingWhatsApp] = useState(false);
+  const [isDownloading, setIsDownloading] = useState(false);
   const toastShown = useRef(false);
   const profileShown = useRef(false);
   const invoiceRef = useRef(null);
@@ -207,19 +210,21 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, set
     }
   };
 
-  const handleDownload = () => {
-    if (invoiceRef.current) {
-      DomToImage.toJpeg(invoiceRef.current, { quality: 0.95 })
-        .then((dataUrl) => {
-          const link = document.createElement("a");
-          link.download = `${selectedInvoice.InvoiceID || selectedInvoice._id}.jpeg`;
-          link.href = dataUrl;
-          link.click();
-        })
-        .catch((error) => {
-          console.error("Error downloading invoice:", error);
-          toast.error("Failed to download image");
-        });
+  const handleDownload = async () => {
+    if (!invoiceRef.current || isDownloading) return;
+    
+    setIsDownloading(true);
+    try {
+      const dataUrl = await DomToImage.toJpeg(invoiceRef.current, { quality: 0.95 });
+      const link = document.createElement("a");
+      link.download = `${selectedInvoice.InvoiceID || selectedInvoice._id}.jpeg`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error("Error downloading invoice:", error);
+      toast.error("Failed to download image");
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -315,6 +320,35 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, set
       toast.error("Failed to send invoice via email.");
     } finally {
       setIsSending(false); // End loading
+    }
+  };
+
+  // Add this function before the return statement
+  const handleWhatsAppShare = async () => {
+    if (!invoiceRef.current || isSendingWhatsApp) return;
+
+    setIsSendingWhatsApp(true);
+    try {
+      const dataUrl = await DomToImage.toJpeg(invoiceRef.current, { quality: 0.95 });
+      const cloudinaryResponse = await axios.post(
+        `${import.meta.env.VITE_BACKEND_URL}api/v1/invoice/store-image`,
+        { image: dataUrl, invoiceId: selectedInvoice.InvoiceID },
+        { withCredentials: true }
+      );
+
+      if (cloudinaryResponse.data.imageUrl) {
+        const phoneNumber = selectedInvoice.CustomerPhone?.replace("+91", "") || "";
+        const message = encodeURIComponent(
+          `Here's your invoice from ${profile.CompanyName}.\nInvoice ID: ${selectedInvoice.InvoiceID}\n\nView/Download your invoice here: ${cloudinaryResponse.data.imageUrl}`
+        );
+        const whatsappUrl = `https://wa.me/91${phoneNumber}?text=${message}`;
+        window.open(whatsappUrl, '_blank');
+      }
+    } catch (error) {
+      console.error("Error sharing via WhatsApp:", error);
+      toast.error("Failed to share via WhatsApp");
+    } finally {
+      setIsSendingWhatsApp(false);
     }
   };
 
@@ -479,6 +513,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, set
                             onClick={(e) => {
                               e.stopPropagation();
                               setSelectedInvoice(row);
+                              setIsEditing(true); // Set editing mode
                               setShowInvoiceModal(true);
                             }}
                           >
@@ -507,6 +542,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, set
               className="absolute top-2 right-3 text-gray-500 hover:text-black text-3xl"
               onClick={() => {
                 setShowInvoiceModal(false);
+                setIsEditing(false); // Reset editing mode
               }}
             >
               &times;
@@ -515,6 +551,7 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, set
               <Invoice
                 invoice={selectedInvoice}
                 profile={profile}
+                isEditing={isEditing}
                 onUpdate={handleUpdate}
                 themes={themes}
               />
@@ -522,21 +559,30 @@ const BillingTable = ({ searchQuery, selectedDate, selectedTab, monthFilter, set
             <div>
               <div className="flex justify-center mt-4 gap-4">
                 <button
-                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+                  className={`px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed`}
                   onClick={handleDownload}
+                  disabled={isDownloading || isSending || isSendingWhatsApp}
                 >
-                  Download
+                  {isDownloading ? "Downloading..." : "Download"}
                 </button>
 
                 <button
                   onClick={sendInvoiceEmail}
-                  className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 ${
-                    isSending ? "opacity-50 cursor-not-allowed" : ""
-                  }`}
-                  disabled={isSending}
+                  className={`bg-blue-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                  disabled={isSending || isDownloading || isSendingWhatsApp}
                 >
                   {isSending ? "Sending..." : "Send Invoice"}
                 </button>
+
+                {selectedInvoice.CustomerPhone && (
+                  <button
+                    onClick={handleWhatsAppShare}
+                    className={`bg-green-600 text-white px-4 py-2 rounded-lg shadow-md hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed`}
+                    disabled={isSendingWhatsApp || isSending || isDownloading}
+                  >
+                    {isSendingWhatsApp ? "Sending..." : "Send via WhatsApp"}
+                  </button>
+                )}
               </div>
             </div>
           </div>

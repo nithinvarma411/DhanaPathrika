@@ -4,6 +4,7 @@ import { User } from "../models/user.model.js";
 import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 import nodemailer from "nodemailer";
+import { uploadOnCloudinary } from "../utils/cloudinary.js";
 
 const generateInvoiceID = async (customerName, invoiceDate, userId) => {
     const namePart = customerName.substring(0, 4).toUpperCase();
@@ -32,10 +33,26 @@ const generateInvoiceID = async (customerName, invoiceDate, userId) => {
 const createInvoice = async (req, res) => {
     try {
         const userId = req.user.id;
-        const { CustomerName, CustomerEmail, Items, AmountPaid, DueDate, Date: invoiceDate, PaymentMethod, IsDue, Discount } = req.body;
+        const { 
+            CustomerName, 
+            CustomerEmail, 
+            CustomerPhone, // Add this
+            Items, 
+            AmountPaid, 
+            DueDate, 
+            Date: invoiceDate, 
+            PaymentMethod, 
+            IsDue, 
+            Discount 
+        } = req.body;
 
         if (!CustomerName || !CustomerEmail || !AmountPaid || !PaymentMethod || Items.length === 0) {
             return res.status(400).send({ "message": "All Fields are required" });
+        }
+
+        // Validate phone number format (optional but recommended)
+        if (CustomerPhone && !/^\+?[\d\s-]{10,}$/.test(CustomerPhone)) {
+            return res.status(400).send({ "message": "Invalid phone number format" });
         }
 
         if (AmountPaid < 0 || Discount < 0) {
@@ -81,6 +98,7 @@ const createInvoice = async (req, res) => {
             InvoiceID,
             CustomerName,
             CustomerEmail,
+            CustomerPhone, // Add this
             Items,
             AmountPaid,
             Discount,
@@ -192,7 +210,8 @@ const updateInvoice = async (req, res) => {
         
         const { 
             CustomerName, 
-            CustomerEmail, 
+            CustomerEmail,
+            CustomerPhone, // Add this
             Items, 
             AmountPaid, 
             DueDate, 
@@ -302,13 +321,14 @@ const updateInvoice = async (req, res) => {
             id,
             { 
                 CustomerName, 
-                CustomerEmail, 
+                CustomerEmail,
+                CustomerPhone, // Add this 
                 Items, 
                 AmountPaid, 
-                DueDate: newIsDue ? DueDate : null, // Clear due date if fully paid
-                Date: invoiceDate, // Use renamed variable
+                DueDate: newIsDue ? DueDate : null,
+                Date: invoiceDate,
                 PaymentMethod, 
-                IsDue: newIsDue, // Set based on calculation
+                IsDue: newIsDue,
                 Discount,
                 lastModified: new Date(),
                 modificationHistory: [
@@ -510,6 +530,33 @@ const updateInvoiceTheme = async (req, res) => {
     }
 };
 
+const storeImage = async (req, res) => {
+    try {
+        const { image, invoiceId } = req.body;
+        const userId = req.user.id;
+
+        if (!image || !invoiceId) {
+            return res.status(400).send({ message: "Image and Invoice ID are required" });
+        }
+
+        // Upload directly to Cloudinary from base64
+        const cloudinaryResponse = await uploadOnCloudinary(image);
+        
+        if (!cloudinaryResponse) {
+            return res.status(500).send({ message: "Error uploading image" });
+        }
+
+        return res.status(200).send({ 
+            message: "Image uploaded successfully",
+            imageUrl: cloudinaryResponse.secure_url 
+        });
+
+    } catch (error) {
+        console.error("Error storing image:", error);
+        return res.status(500).send({ message: "Internal Server Error" });
+    }
+};
+
 export { 
     createInvoice, 
     getInvoices,
@@ -519,5 +566,6 @@ export {
     getLatestInvoice, 
     sendInvoiceEmail, 
     getMonthlyIncome,
-    updateInvoiceTheme 
+    updateInvoiceTheme,
+    storeImage 
 };

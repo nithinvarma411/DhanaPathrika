@@ -112,6 +112,12 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
 
       newItems[idx] = { ...oldItem, [field]: newValue };
       setEditableInvoice({ ...editableInvoice, Items: newItems });
+    } else if (name === "CustomerPhone") {
+      // Add +91 prefix when saving phone number
+      setEditableInvoice({
+        ...editableInvoice,
+        [name]: value ? `+91${value}` : "",
+      });
     } else {
       setEditableInvoice({ ...editableInvoice, [name]: value });
     }
@@ -202,6 +208,7 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
 
   if (isEditing) {
     const { totalAmount, dueAmount } = calculateTotals(editableInvoice.Items);
+    const actualBalance = totalAmount - (editableInvoice.Discount || 0) - editableInvoice.AmountPaid;
 
     return (
       <form
@@ -240,6 +247,25 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
                 required
               />
             </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700">
+                Customer Phone
+              </label>
+              <div className="flex">
+                <span className="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 sm:text-sm">
+                  +91
+                </span>
+                <input
+                  type="tel"
+                  name="CustomerPhone"
+                  value={(editableInvoice.CustomerPhone || "").replace("+91", "")}
+                  onChange={handleInputChange}
+                  maxLength={10}
+                  placeholder="Enter 10 digit number"
+                  className="mt-0 block w-full rounded-r-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Payment Details Section */}
@@ -274,7 +300,7 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
               />
             </div>
-            {editableInvoice.AmountPaid < totalAmount && (
+            {actualBalance > 0 && (
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Due Date
@@ -284,13 +310,11 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
                   name="DueDate"
                   value={
                     editableInvoice.DueDate
-                      ? new Date(editableInvoice.DueDate)
-                          .toISOString()
-                          .split("T")[0]
+                      ? new Date(editableInvoice.DueDate).toISOString().split("T")[0]
                       : ""
                   }
                   onChange={handleInputChange}
-                  min={new Date().toISOString().split("T")[0]}
+                  min={editableInvoice._id ? undefined : new Date().toISOString().split("T")[0]} // Only apply min date for new invoices
                   className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
                   required
                 />
@@ -495,6 +519,9 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
               </p>
               <p className="text-sm md:text-base break-words">
                 {invoice.CustomerEmail || "N/A"}
+              </p>
+              <p className="text-sm md:text-base break-words">
+                {(invoice.CustomerPhone || "N/A").replace("+91", "")}
               </p>
             </div>
 

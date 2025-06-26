@@ -222,11 +222,15 @@ const ProfileSection = () => {
               <input
                 type="text"
                 name="CompanyName"
+                maxLength={25}
                 className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
                 value={formData.CompanyName}
                 onChange={handleChange}
                 readOnly={!isEditing}
               />
+              <div className="text-xs text-gray-500 text-right">
+                {formData.CompanyName ? formData.CompanyName.length : 0}/25
+              </div>
             </div>
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">UserName</label>
@@ -289,9 +293,16 @@ const ProfileSection = () => {
               <input
                 type="text"
                 name="Pincode"
+                maxLength={6}
+                pattern="\d*"
+                inputMode="numeric"
                 className="w-full border border-gray-200 rounded-lg p-3 focus:ring-2 focus:ring-red-500 focus:border-transparent transition"
                 value={formData.Pincode}
-                onChange={handleChange}
+                onChange={e => {
+                  // Only allow up to 6 digits, and only numbers
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 6);
+                  setFormData({ ...formData, Pincode: val });
+                }}
                 readOnly={!isEditing}
               />
             </div>

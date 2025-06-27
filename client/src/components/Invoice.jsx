@@ -579,9 +579,7 @@ const Invoice = ({ invoice, profile, isEditing, onUpdate, themes }) => {
 
                   <tr className="border-b border-gray-300">
                     <td className="py-2 px-2 sm:px-4 font-bold">TOTAL</td>
-                    <td className="py-2 px-2 sm:px-4 text-right">
-                      {totalQuantity}
-                    </td>
+                    <td className="py-2 px-2 sm:px-4 text-right"></td>
                     <td className="py-2 px-2 sm:px-4 text-right"></td>
                     <td className="py-2 px-2 sm:px-4 text-right font-bold">
                       ₹ {totalAmount}

@@ -7,7 +7,8 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "electron .",
     "dev": "electronmon main.js",
-    "build": "electron-builder"
+    "build": "electron-builder",
+    "build:mac": "electron-builder --mac"
   },
   "author": "",
   "license": "ISC",
@@ -30,6 +31,7 @@
       "node_modules/**/*"
     ],
     "directories": {
+      "output": "dist",
       "buildResources": "assets"
     },
     "win": {

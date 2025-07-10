@@ -25,7 +25,7 @@ jobs:
       - name: Build macOS app
         run: |
           npm install -g electron-builder
-          npm run build  # Make sure this script runs `electron-builder --mac`
+          npm run build:mac  # Make sure this script runs `electron-builder --mac`
         working-directory: desktop-app
 
       - name: Upload macOS installer

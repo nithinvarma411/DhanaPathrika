@@ -145,28 +145,71 @@ You can run Dhana Pathrika as a desktop application using ElectronJS.
 
 ### Installation & Usage
 
+#### For **Windows**:
 1. **Navigate to the desktop app directory:**
    ```bash
    cd desktop-app
    ```
-
 2. **Install dependencies:**
    ```bash
    npm install
    ```
-
 3. **Run the desktop app in development mode:**
    ```bash
    npm run dev
    ```
    This will launch the app with hot-reloading.
-
 4. **Run the desktop app in production mode:**
    ```bash
    npm start
    ```
+5. **Build the desktop app for Windows distribution:**
+   ```bash
+   npm run build
+   ```
+   The packaged `.exe` application will be available in the `dist` folder.
 
-5. **Build the desktop app for distribution:**
+#### For **macOS**:
+1. **Navigate to the desktop app directory:**
+   ```bash
+   cd desktop-app
+   ```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Run the desktop app in development mode:**
+   ```bash
+   npm run dev
+   ```
+4. **Run the desktop app in production mode:**
+   ```bash
+   npm start
+   ```
+5. **Build the desktop app for macOS distribution:**
+   ```bash
+   npm run build:mac
+   ```
+   The packaged `.dmg` application will be available in the `dist` folder.
+
+#### For **Linux**:
+1. **Navigate to the desktop app directory:**
+   ```bash
+   cd desktop-app
+   ```
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+3. **Run the desktop app in development mode:**
+   ```bash
+   npm run dev
+   ```
+4. **Run the desktop app in production mode:**
+   ```bash
+   npm start
+   ```
+5. **Build the desktop app for Linux distribution:**
    ```bash
    npm run build
    ```

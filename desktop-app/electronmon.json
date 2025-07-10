@@ -1,0 +1,7 @@
+{
+  "ignore": [
+    "**/desktop.ini",
+    "**/.DS_Store",
+    "node_modules"
+  ]
+}

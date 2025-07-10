@@ -1,0 +1,42 @@
+{
+  "name": "desktop-app",
+  "version": "1.0.0",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "electron .",
+    "dev": "electronmon main.js",
+    "build": "electron-builder"
+  },
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "electron": "^37.2.0",
+    "electron-builder": "^26.0.12",
+    "electronmon": "^2.0.3"
+  },
+  "dependencies": {
+    "electron-store": "^10.1.0"
+  },
+  "build": {
+    "appId": "com.yourdomain.desktopapp",
+    "productName": "Dhanapathrika",
+    "files": [
+      "**/*"
+    ],
+    "directories": {
+      "buildResources": "assets"
+    },
+    "win": {
+      "icon": "assets/image.ico"
+    },
+    "mac": {
+      "icon": "assets/image.icns"
+    },
+    "linux": {
+      "icon": "assets/image.png"
+    }
+  }
+}

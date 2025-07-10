@@ -139,6 +139,41 @@ cd GOserver
 go run main.go
 ```
 
+## 🖥️ Desktop App (ElectronJS)
+
+You can run Dhana Pathrika as a desktop application using ElectronJS.
+
+### Installation & Usage
+
+1. **Navigate to the desktop app directory:**
+   ```bash
+   cd desktop-app
+   ```
+
+2. **Install dependencies:**
+   ```bash
+   npm install
+   ```
+
+3. **Run the desktop app in development mode:**
+   ```bash
+   npm run dev
+   ```
+   This will launch the app with hot-reloading.
+
+4. **Run the desktop app in production mode:**
+   ```bash
+   npm start
+   ```
+
+5. **Build the desktop app for distribution:**
+   ```bash
+   npm run build
+   ```
+   The packaged application will be available in the `dist` folder.
+
+> **Note:** Make sure you have [Node.js](https://nodejs.org/) installed.
+
 ## 📈 Business Impact
 
 - **Efficiency**: Reduces manual work by 75%

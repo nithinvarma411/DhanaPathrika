@@ -217,6 +217,19 @@ You can run Dhana Pathrika as a desktop application using ElectronJS.
 
 > **Note:** Make sure you have [Node.js](https://nodejs.org/) installed.
 
+
+### 📦 Download Desktop App
+
+You can directly download and install the Dhana Pathrika desktop app:
+
+- 💻 **Windows Installer**: [Download EXE](https://drive.google.com/file/d/14kVPe_3krpRYOsGXYddIeScS89CxgBXM/view?usp=sharing)
+- 🍎 **macOS Installer**: [Download DMG](https://drive.google.com/file/d/131LUwPVd0vUk3t-9bU08EvYD8RIH2tzy/view?usp=sharing)
+
+> ⚠️ **Windows:** You may see a SmartScreen warning since the app isn't code-signed. Click **"More Info" → "Run Anyway"** to proceed.
+
+> ⚠️ **macOS:** You may need to allow permission manually from **System Preferences → Security & Privacy → Open Anyway** if macOS blocks the app.
+
+
 ## 📈 Business Impact
 
 - **Efficiency**: Reduces manual work by 75%

@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main  # Runs the build whenever you push to the main branch
+    paths:
+      - 'desktop-app/**'
 
 jobs:
   build-macos:

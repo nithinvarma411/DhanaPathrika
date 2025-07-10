@@ -24,7 +24,10 @@
     "appId": "com.dhanapathrika.desktopapp",
     "productName": "Dhanapathrika",
     "files": [
-      "**/*"
+      "main.js",
+      "package.json",
+      "assets/**/*",
+      "node_modules/**/*"
     ],
     "directories": {
       "buildResources": "assets"
@@ -33,7 +36,10 @@
       "icon": "assets/image.ico"
     },
     "mac": {
-      "icon": "assets/image.icns"
+      "icon": "assets/image.icns",
+      "target": [
+        "dmg"
+      ]
     },
     "linux": {
       "icon": "assets/image.png"
